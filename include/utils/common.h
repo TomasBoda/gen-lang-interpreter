@@ -2,8 +2,6 @@
 #define gen_lang_common_h
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef uint8_t byte_t;
 

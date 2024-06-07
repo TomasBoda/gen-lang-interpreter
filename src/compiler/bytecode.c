@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "bytecode.h"
-#include "error.h"
-#include "common.h"
+#include "compiler/bytecode.h"
+#include "utils/error.h"
+#include "utils/common.h"
 
 bytecode_t* bytecode_init() {
     bytecode_t* bytecode = (bytecode_t*)malloc(sizeof(bytecode_t));

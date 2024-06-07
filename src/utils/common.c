@@ -1,4 +1,8 @@
-#include "common.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "utils/common.h"
 
 byte_t* double_to_bytes(double value) {
     byte_t* bytes = (byte_t*)malloc(8 * sizeof(byte_t));

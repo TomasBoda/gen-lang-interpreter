@@ -1,9 +1,11 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "lexer.h"
-#include "error.h"
-#include "common.h"
+
+#include "lexer/lexer.h"
+#include "utils/error.h"
+#include "utils/common.h"
 
 typedef struct {
     const char* start;
@@ -204,7 +206,6 @@ token_t lexer_get_token() {
         case '-': return make_token(TOKEN_MINUS);
         case '*': return make_token(TOKEN_STAR);
         case '/': return make_token(TOKEN_SLASH);
-        case '%': return make_token(TOKEN_MODULO);
         case '=': return make_token(match('=') ? TOKEN_EQ : TOKEN_ASSIGNMENT);
         case '!': return make_token(match('=') ? TOKEN_EMPHASIS : TOKEN_NE);
         case '<': return make_token(match('=') ? TOKEN_LE : TOKEN_LT);

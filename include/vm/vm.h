@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "bytecode.h"
+#include "compiler/bytecode.h"
 
 #define STACK_MAX 256
 

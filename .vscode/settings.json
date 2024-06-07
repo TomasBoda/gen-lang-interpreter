@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "error.h": "c",
+        "compiler.h": "c",
+        "common.h": "c",
+        "bytecode.h": "c",
+        "table.h": "c",
+        "interpreter.h": "c"
+    }
+}

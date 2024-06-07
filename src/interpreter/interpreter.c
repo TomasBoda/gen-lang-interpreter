@@ -1,17 +1,18 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 
-#include "interpreter.h"
-#include "lexer.h"
-#include "compiler.h"
-#include "bytecode.h"
-#include "vm.h"
-#include "common.h"
+#include "lexer/lexer.h"
+#include "compiler/compiler.h"
+#include "compiler/bytecode.h"
+#include "compiler/instruction.h"
+#include "vm/vm.h"
+#include "interpreter/interpreter.h"
+#include "utils/common.h"
 
-char* op_code_labels[] = {
+const char* op_code_labels[] = {
     "LOAD_CONST",
     "CONST_NUMERIC_LITERAL",
     "CONST_BOOLEAN_LITERAL",
@@ -66,6 +67,25 @@ char* op_code_labels[] = {
     "NEWLINE",
 };
 
+static void print_bytecode(bytecode_t* bytecode);
+
+void interpreter_init(const char* source_code) {
+    lexer_init(source_code);
+    compiler_init();
+}
+
+void interpret() {
+    bytecode_t* bytecode = compile();
+
+    printf("BYTECODE --------------------\n");
+    print_bytecode(bytecode);
+    printf("-----------------------------\n");
+
+    printf("OUTPUT ----------------------\n");
+    vm_run(bytecode);
+    printf("-----------------------------\n");
+}
+
 static void print_bytecode(bytecode_t* bytecode) {
     for (int i = 0; i < bytecode->count; ++i) {
         switch (bytecode->instructions[i]) {
@@ -113,15 +133,4 @@ static void print_bytecode(bytecode_t* bytecode) {
             }
         }
     }
-}
-
-void interpreter_init(const char* source_code) {
-    lexer_init(source_code);
-    compiler_init();
-}
-
-void interpret() {
-    bytecode_t* bytecode = compile();
-    print_bytecode(bytecode);
-    vm_run(bytecode);
 }

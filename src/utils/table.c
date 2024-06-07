@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#include "table.h"
-#include "vm.h"
-#include "error.h"
+#include "vm/vm.h"
+#include "utils/table.h"
+#include "utils/error.h"
 
 static unsigned long hash_function(const char* str) {
     unsigned long hash = 5381;

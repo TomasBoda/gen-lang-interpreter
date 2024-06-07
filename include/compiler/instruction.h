@@ -1,10 +1,5 @@
-#ifndef gen_lang_compiler_h
-#define gen_lang_compiler_h
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "bytecode.h"
+#ifndef gen_lang_instruction_h
+#define gen_lang_instruction_h
 
 typedef enum {
     OP_LOAD_CONST,
@@ -44,7 +39,6 @@ typedef enum {
     OP_MUL,
     OP_DIV,
     OP_DIV_FLOOR,
-    OP_MOD,
     OP_NEG,
 
     OP_CMP_EQ,
@@ -60,8 +54,5 @@ typedef enum {
     OP_PRINT,
     OP_NEWLINE,
 } op_code_t;
-
-void compiler_init();
-bytecode_t* compile();
 
 #endif

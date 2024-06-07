@@ -1,5 +1,7 @@
-#include "error.h"
 #include <stdlib.h>
+#include <stdio.h>
+
+#include "utils/error.h"
 
 void error_throw(error_type type, char* error_string, int line) {
     switch (type) {

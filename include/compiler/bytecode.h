@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "common.h"
+#include "utils/common.h"
 
 #define BYTECODE_INITIAL_SIZE 10
 
@@ -12,7 +12,6 @@ typedef struct {
     int count;
     int capacity;
     byte_t* instructions;
-    int* lines;
 } bytecode_t;
 
 bytecode_t* bytecode_init();

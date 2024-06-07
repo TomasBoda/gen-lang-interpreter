@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "bytecode.h"
-#include "compiler.h"
-#include "lexer.h"
-#include "error.h"
-#include "table.h"
-#include "common.h"
+#include "lexer/lexer.h"
+#include "compiler/bytecode.h"
+#include "compiler/compiler.h"
+#include "compiler/instruction.h"
+#include "utils/error.h"
+#include "utils/table.h"
+#include "utils/common.h"
 
 typedef struct {
     bytecode_t* bytecode;
@@ -241,8 +242,6 @@ static void compile_binary_operator(token_t operator_token) {
             return emit(OP_MUL);
         case TOKEN_SLASH:
             return emit(OP_DIV);
-        case TOKEN_MODULO:
-            return emit(OP_MOD);
         default:
             return error_throw(error_type_compiler, "Unknown binary operator", operator_token.line);
     }
