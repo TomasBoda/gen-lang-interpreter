@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "lexer.h"
-#include "error.h"
-#include "common.h"
+#include "../error.h"
+#include "../common.h"
 
 typedef struct {
     const char* start;

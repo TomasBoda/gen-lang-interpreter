@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "interpreter.h"
+#include "interpreter/interpreter.h"
 
 static char* read_file(const char* path) {
     FILE* file = fopen(path, "rb");

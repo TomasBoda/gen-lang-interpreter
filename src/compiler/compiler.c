@@ -4,12 +4,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "bytecode.h"
+#include "../bytecode.h"
 #include "compiler.h"
-#include "lexer.h"
-#include "error.h"
-#include "table.h"
-#include "common.h"
+#include "../lexer/lexer.h"
+#include "../error.h"
+#include "../table.h"
+#include "../common.h"
 
 typedef struct {
     bytecode_t* bytecode;

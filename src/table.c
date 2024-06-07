@@ -4,7 +4,7 @@
 #include <memory.h>
 
 #include "table.h"
-#include "vm.h"
+#include "vm/vm.h"
 #include "error.h"
 
 static unsigned long hash_function(const char* str) {

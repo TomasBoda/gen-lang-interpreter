@@ -1,10 +1,9 @@
 #include <stdbool.h>
 
-#include "common.h"
-#include "vm.h"
-#include "bytecode.h"
-#include "compiler.h"
-#include "table.h"
+#include "../common.h"
+#include "../bytecode.h"
+#include "../compiler/compiler.h"
+#include "../table.h"
 
 virtual_machine_t vm;
 bytecode_t* bytecode;
