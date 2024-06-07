@@ -1,1 +1,4 @@
-var number = 10 + 2;
+var firstname = "John";
+var lastname = "Doe";
+
+print firstname + " " + lastname;

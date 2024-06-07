@@ -81,8 +81,10 @@ void interpret() {
     print_bytecode(bytecode);
     printf("-----------------------------\n");
 
+    vm_init(bytecode);
+
     printf("OUTPUT ----------------------\n");
-    vm_run(bytecode);
+    vm_run();
     printf("-----------------------------\n");
 }
 
