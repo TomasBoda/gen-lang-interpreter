@@ -1,7 +1,7 @@
 #ifndef gen_lang_table_h
 #define gen_lang_table_h
 
-#include "vm/vm.h"
+#include "vm.h"
 
 #define TABLE_SIZE 256
 

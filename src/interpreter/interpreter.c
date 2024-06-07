@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include "interpreter.h"
-#include "../lexer/lexer.h"
-#include "../compiler/compiler.h"
-#include "../bytecode.h"
-#include "../vm/vm.h"
-#include "../common.h"
+#include "lexer.h"
+#include "compiler.h"
+#include "bytecode.h"
+#include "vm.h"
+#include "common.h"
 
 char* op_code_labels[] = {
     "LOAD_CONST",

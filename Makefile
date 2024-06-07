@@ -9,6 +9,9 @@ CFLAGS := -Wall -g
 # Source directory
 SRC_DIR := src
 
+# Include directory
+INCLUDE_DIR := include
+
 # Object files directory
 OBJ_DIR := build
 
@@ -20,6 +23,9 @@ SOURCES := $(shell find $(SRC_DIR) -name '*.c')
 
 # Object files corresponding to sources
 OBJECTS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SOURCES))
+
+# Add the include directory to the compiler flags
+CFLAGS += -I$(INCLUDE_DIR)
 
 # Default target
 all: $(EXEC)
