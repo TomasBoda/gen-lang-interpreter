@@ -72,19 +72,20 @@ void interpreter_init(const char* source_code) {
 
 void interpret() {
     bytecode_t* bytecode = compile();
+    printf("INFO: Compiled\n");
+    printf("--------------\n");
 
-    printf("BYTECODE --------------------\n");
     print_bytecode(bytecode);
-    printf("-----------------------------\n");
 
     vm_init(bytecode);
-
-    printf("OUTPUT ----------------------\n");
     vm_run();
-    printf("-----------------------------\n");
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
+    return;
+
+    printf("BYTECODE --------------------\n");
+
     for (int i = 0; i < bytecode->count; ++i) {
         switch (bytecode->instructions[i]) {
             case OP_LOAD_NUM_CONST: {
@@ -131,4 +132,6 @@ static void print_bytecode(bytecode_t* bytecode) {
             }
         }
     }
+
+    printf("-----------------------------\n");
 }

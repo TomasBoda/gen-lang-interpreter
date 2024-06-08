@@ -256,7 +256,7 @@ static void run_load_num_const() {
 }
 
 static void run_load_bool_const() {
-    if (DEBUG == true) printf("Running run_load_bool_const on ip = %d, op_type = %d\n", vm.ip);
+    if (DEBUG == true) printf("Running run_load_bool_const\n");
 
     byte_t boolean_literal = next();
     stack_push(create_boolean_literal(boolean_literal == 1));
@@ -307,6 +307,8 @@ static value_t* load_var(char* identifier) {
     if (local_var != NULL) {
         return local_var;
     }
+
+    return NULL;
 }
 
 static void run_load_var() {
@@ -395,7 +397,8 @@ static void run_return() {
     call_frame_free(&call_frame);
 
     if (call_stack_current(vm.call_stack) == NULL) {
-        printf("Finished running\n");
+        printf("--------------\n");
+        printf("INFO: Finished\n");
         exit(0);
     }
 }
