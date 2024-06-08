@@ -20,7 +20,7 @@ bytecode_t* bytecode_init() {
 
     if (bytecode->instructions == NULL) {
         free(bytecode);
-        error_throw(error_type_compiler, "Failed to allocate memory for bytecode array", 0);
+        error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode array", 0);
     }
 
     return bytecode;
@@ -32,7 +32,7 @@ void bytecode_add(bytecode_t* bytecode, byte_t instruction) {
         bytecode->instructions = (byte_t*)realloc(bytecode->instructions, bytecode->capacity * sizeof(byte_t));
 
         if (bytecode->instructions == NULL) {
-            error_throw(error_type_compiler, "Failed to reallocate memory for bytecode array", 0);
+            error_throw(ERROR_COMPILER, "Failed to reallocate memory for bytecode array", 0);
         }
     }
 

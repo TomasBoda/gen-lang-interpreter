@@ -32,6 +32,26 @@ table_t* table_init(int capacity) {
     return table;
 }
 
+void entry_free(entry_t* entry) {
+    if (entry == NULL) return;
+    free(entry->key);
+    if (entry->value.type == TYPE_STRING) {
+        free(entry->value.as.string);
+    }
+    entry_free(entry->next);
+    free(entry);
+}
+
+void table_free(table_t* table) {
+    for (int i = 0; i < table->capacity; i++) {
+        entry_free(table->buckets[i]);
+    }
+    free(table->buckets);
+    table->buckets = NULL;
+    table->size = 0;
+    table->capacity = 0;
+}
+
 void table_set(table_t* table, const char* key, value_t value) {
     unsigned long hash = hash_function(key);
     size_t index = hash % table->capacity;

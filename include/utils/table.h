@@ -18,6 +18,8 @@ typedef struct {
 } table_t;
 
 table_t* table_init(int capacity);
+void table_free(table_t* table);
+void entry_free(entry_t* entry);
 void table_set(table_t* table, const char* key, value_t value);
 value_t* table_get(table_t* table, const char* key);
 void table_delete(table_t* table, const char* key);

@@ -3,9 +3,15 @@
 #include <string.h>
 
 #include "utils/common.h"
+#include "utils/error.h"
 
 byte_t* double_to_bytes(double value) {
     byte_t* bytes = (byte_t*)malloc(8 * sizeof(byte_t));
+
+    if (bytes == NULL) {
+        error_throw(ERROR_RUNTIME, "Failed to allocate bytes for a double", 0);
+    }
+
     memcpy(bytes, &value, sizeof(double));
     return bytes;
 }
@@ -37,6 +43,11 @@ byte_t* string_to_bytes(const char* str, size_t* size) {
 char* bytes_to_string(byte_t* bytes, size_t size) {
     char* string = (char*)malloc(size * sizeof(char));
 
+    if (string == NULL) {
+        error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", 0);
+        return NULL;
+    }
+
     for (size_t i = 0; i < size; i++) {
         string[i] = bytes[i];
     }
@@ -55,14 +66,12 @@ char* substring(const char* str, int length) {
         length = str_len;
     }
 
-    char* substr = (char*)malloc((length + 1) * sizeof(char));
+    char* substr = (char*)malloc(length * sizeof(char));
     if (substr == NULL) {
         return NULL;
     }
 
     strncpy(substr, str, length);
-
-    substr[length] = '\0';
 
     return substr;
 }

@@ -1,4 +1,14 @@
-var firstname = "John";
-var lastname = "Doe";
+func main() {
+    var a = 3;
+    var b = 2;
 
-print firstname + " " + lastname;
+    print add(a, b);
+}
+
+func mul(var a, var b) {
+    return a * b;
+}
+
+func add(var a, var b) {
+    return mul(a, a) + mul(b, b);
+}

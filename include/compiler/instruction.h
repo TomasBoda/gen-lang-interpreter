@@ -2,15 +2,12 @@
 #define gen_lang_instruction_h
 
 typedef enum {
-    OP_LOAD_CONST,
-    OP_CONST_NUMERIC_LITERAL,
-    OP_CONST_BOOLEAN_LITERAL,
-    OP_CONST_STRING_LITERAL,
+    OP_LOAD_NUM_CONST,
+    OP_LOAD_BOOL_CONST,
+    OP_LOAD_STR_CONST,
 
-    OP_LOAD_GLOBAL,
-    OP_STORE_GLOBAL,
-    OP_LOAD_LOCAL,
-    OP_STORE_LOCAL,
+    OP_LOAD_VAR,
+    OP_STORE_VAR,
 
     OP_FUNC_DEF,
     OP_FUNC_END,

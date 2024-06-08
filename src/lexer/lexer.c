@@ -173,7 +173,7 @@ static token_t string() {
     }
 
     if (is_at_end()) {
-        error_throw(error_type_compiler, "Unterminated string", lexer.line);
+        error_throw(ERROR_COMPILER, "Unterminated string", lexer.line);
     };
 
     advance();
@@ -213,7 +213,7 @@ token_t lexer_get_token() {
         case '"': return string();
     }
 
-    error_throw(error_type_compiler, "Unexpected character found during lexing", lexer.line);
+    error_throw(ERROR_COMPILER, "Unexpected character found during lexing", lexer.line);
 
     token_t* token = (token_t*)malloc(sizeof(token_t));
     return *token;

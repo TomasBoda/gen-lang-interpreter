@@ -14,30 +14,19 @@
 
 typedef struct {
     bytecode_t* bytecode;
-    table_t* table;
     token_t current_token;
 } compiler_t;
 
 compiler_t compiler;
 
-static value_t* load_global_variable(char* identifier) {
-    return table_get(compiler.table, identifier);
-}
-
-static void store_global_variable(char* identifier) {
-    value_t* value = (value_t*)malloc(sizeof(value_t));
-    table_set(compiler.table, identifier, *value);
-}
-
 static void emit(byte_t instruction) {
     bytecode_add(compiler.bytecode, instruction);
 }
 
-static void emit_numeric_literal(token_t token) {
-    emit(OP_LOAD_CONST);
-    emit(OP_CONST_NUMERIC_LITERAL);
+static void emit_numeric_literal(char* raw_value) {
+    emit(OP_LOAD_NUM_CONST);
 
-    double value = atof(substring(token.start, token.length));
+    double value = atof(raw_value);
     byte_t* bytes = double_to_bytes(value);
 
     for (int i = 0; i < 8; i++) {
@@ -45,30 +34,70 @@ static void emit_numeric_literal(token_t token) {
     }
 }
 
-static void emit_boolean_literal(token_t token) {
-    emit(OP_LOAD_CONST);
-    emit(OP_CONST_BOOLEAN_LITERAL);
+static void emit_numeric_literal_num(double value) {
+    emit(OP_LOAD_NUM_CONST);
 
-    if (strcmp(substring(token.start, token.length), "true") == 0) {
+    byte_t* bytes = double_to_bytes(value);
+
+    for (int i = 0; i < 8; i++) {
+        emit(bytes[i]);
+    }
+}
+
+static void emit_boolean_literal(char* raw_value) {
+    emit(OP_LOAD_BOOL_CONST);
+
+    if (strcmp(raw_value, "true") == 0) {
         emit(1);
     } else {
         emit(0);
     }
 }
 
-static void emit_string_literal(token_t token) {
-    emit(OP_LOAD_CONST);
-    emit(OP_CONST_STRING_LITERAL);
+static void emit_string_literal(char* raw_value) {
+    emit(OP_LOAD_STR_CONST);
 
     size_t instruction_count;
-    byte_t* instructions = string_to_bytes(substring(token.start, token.length), &instruction_count);
+    byte_t* instructions = string_to_bytes(raw_value, &instruction_count);
 
     for (size_t i = 0; i < instruction_count; i++) {
         emit(instructions[i]);
     }
 }
 
+static double get_main_func_ip() {
+    for (int i = 0; i < compiler.bytecode->count; i++) {
+        if (compiler.bytecode->instructions[i] == OP_LOAD_STR_CONST) {
+            byte_t size = compiler.bytecode->instructions[i + 1];
+            byte_t bytes[size];
+            for (int j = 0; j < size; j++) {
+                bytes[j] = compiler.bytecode->instructions[i + 2 + j];
+            }
+
+            char* identifier = bytes_to_string(bytes, size);
+
+            if (strcmp(identifier, "main") == 0 && compiler.bytecode->instructions[i + 1 + size + 1] == OP_FUNC_DEF) {
+                return (double)(i + 1 + size + 1 + 1);
+            }
+        }
+    }
+
+    error_throw(ERROR_COMPILER, "main() function is missing", 0);
+    return 0;
+}
+
+static void emit_main_func_call() {
+    double main_func_ip = get_main_func_ip();
+    emit_numeric_literal_num(main_func_ip);
+    emit_numeric_literal_num(0);
+    emit(OP_CALL);
+}
+
 static void compile_var_declaration();
+static void compile_func_declaration();
+static void compile_func_declaration_param_list();
+static void compile_func_declaration_body();
+static void compile_return();
 static void compile_print();
 
 static void compile_expression();
@@ -76,6 +105,8 @@ static void compile_logical_expression();
 static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
+static void compile_call_expression();
+static size_t compile_call_expression_args();
 static void compile_primary_expression();
 static void compile_identifier();
 static void compile_numeric_literal();
@@ -102,7 +133,7 @@ static token_t assert(token_type type) {
     token_t token = advance();
 
     if (token.type != type) {
-        error_throw(error_type_compiler, "token assertion failed", token.line);
+        error_throw(ERROR_COMPILER, "token assertion failed", token.line);
     }
 
     return token;
@@ -110,7 +141,6 @@ static token_t assert(token_type type) {
 
 void compiler_init() {
     compiler.bytecode = bytecode_init();
-    compiler.table = table_init(50);
     compiler.current_token = lexer_get_token();
 }
 
@@ -120,14 +150,18 @@ bytecode_t* compile() {
             case TOKEN_VAR:
                 compile_var_declaration();
                 break;
+            case TOKEN_FUNC:
+                compile_func_declaration();
+                break;
             case TOKEN_PRINT:
                 compile_print();
                 break;
             default:
-                error_throw(error_type_compiler, "Unrecognized top level statement", peek().line);
+                error_throw(ERROR_COMPILER, "Unrecognized top level statement", peek().line);
         }
     }
 
+    emit_main_func_call();
     return compiler.bytecode;
 }
 
@@ -139,10 +173,74 @@ static void compile_var_declaration() {
     compile_expression();
     assert(TOKEN_SEMICOLON);
 
-    emit_string_literal(identifier_token);
-    emit(OP_STORE_GLOBAL);
+    emit_string_literal(substring(identifier_token.start, identifier_token.length));
+    emit(OP_STORE_VAR);
+}
 
-    store_global_variable(substring(identifier_token.start, identifier_token.length));
+// TODO
+static void compile_func_declaration() {
+    assert(TOKEN_FUNC);
+    token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+    emit_string_literal(substring(identifier_token.start, identifier_token.length));
+    emit(OP_FUNC_DEF);
+
+    assert(TOKEN_OPEN_PAREN);
+    compile_func_declaration_param_list();
+    assert(TOKEN_CLOSE_PAREN);
+
+    assert(TOKEN_OPEN_BRACE);
+    compile_func_declaration_body();
+    assert(TOKEN_CLOSE_BRACE);
+
+    emit_numeric_literal("0");
+    emit(OP_RETURN);
+
+    emit(OP_FUNC_END);
+}
+
+static void compile_func_declaration_param_list() {
+    while (peek().type != TOKEN_CLOSE_PAREN) {
+        assert(TOKEN_VAR);
+        token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+        emit_string_literal(substring(identifier_token.start, identifier_token.length));
+        emit(OP_STORE_VAR);
+
+        if (peek().type == TOKEN_COMMA) {
+            advance();
+        }
+    }
+}
+
+static void compile_func_declaration_body() {
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        switch (peek().type) {
+            case TOKEN_VAR: {
+                compile_var_declaration();
+                break;
+            }
+            case TOKEN_PRINT: {
+                compile_print();
+                break;
+            }
+            case TOKEN_RETURN: {
+                compile_return();
+                break;
+            }
+            default: {
+                error_throw(ERROR_COMPILER, "Unknown statement in function body", 0);
+                break;
+            }
+        }
+    }
+}
+
+static void compile_return() {
+    assert(TOKEN_RETURN);
+    compile_expression();
+    assert(TOKEN_SEMICOLON);
+    emit(OP_RETURN);
 }
 
 static void compile_print() {
@@ -176,7 +274,7 @@ static void compile_logical_operator(token_t operator_token) {
         case TOKEN_OR:
             return emit(OP_OR);
         default:
-            return error_throw(error_type_compiler, "Unknown logical operator", operator_token.line);
+            return error_throw(ERROR_COMPILER, "Unknown logical operator", operator_token.line);
     }
 }
 
@@ -206,7 +304,7 @@ static void compile_relational_operator(token_t operator_token) {
         case TOKEN_LE:
             return emit(OP_CMP_LE);
         default:
-            return error_throw(error_type_compiler, "Unknown relational operator", operator_token.line);
+            return error_throw(ERROR_COMPILER, "Unknown relational operator", operator_token.line);
     }
 }
 
@@ -222,12 +320,12 @@ static void compile_additive_expression() {
 }
 
 static void compile_multiplicative_expression() {
-    compile_primary_expression();
+    compile_call_expression();
 
     while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
         token_t operator_token = advance();
 
-        compile_primary_expression();
+        compile_call_expression();
         compile_binary_operator(operator_token);
     }
 }
@@ -243,8 +341,38 @@ static void compile_binary_operator(token_t operator_token) {
         case TOKEN_SLASH:
             return emit(OP_DIV);
         default:
-            return error_throw(error_type_compiler, "Unknown binary operator", operator_token.line);
+            return error_throw(ERROR_COMPILER, "Unknown binary operator", operator_token.line);
     }
+}
+
+static void compile_call_expression() {
+    compile_primary_expression();
+
+    if (peek().type == TOKEN_OPEN_PAREN) {
+        advance();
+        size_t arg_count = compile_call_expression_args();
+        assert(TOKEN_CLOSE_PAREN);
+
+        emit_numeric_literal_num((double)arg_count);
+        emit(OP_CALL);
+
+        // TODO: fix LOAD_LOCAL in identifier of call expression
+    }
+}
+
+static size_t compile_call_expression_args() {
+    size_t arg_count = 0;
+
+    while (peek().type != TOKEN_CLOSE_PAREN) {
+        compile_expression();
+        arg_count++;
+
+        if (peek().type == TOKEN_COMMA) {
+            advance();
+        }
+    }
+
+    return arg_count;
 }
 
 static void compile_primary_expression() {
@@ -260,7 +388,7 @@ static void compile_primary_expression() {
         case TOKEN_STRING_LITERAL:
             return compile_string_literal();
         default:
-            return error_throw(error_type_compiler, "Unknown primary expression", peek().line);
+            return error_throw(ERROR_COMPILER, "Unknown primary expression", peek().line);
     }
 }
 
@@ -271,25 +399,23 @@ static void compile_parenthesised_expression() {
 }
 
 static void compile_identifier() {
-    token_t token = advance();
+    token_t token = assert(TOKEN_IDENTIFIER);
 
-    emit_string_literal(token);
-
-    if (load_global_variable(substring(token.start, token.length)) == NULL) {
-        error_throw(error_type_compiler, "Global variable does not exists", token.line);
-    }
-
-    emit(OP_LOAD_GLOBAL);
+    emit_string_literal(substring(token.start, token.length));
+    emit(OP_LOAD_VAR);
 }
 
 static void compile_numeric_literal() {
-    emit_numeric_literal(advance());
+    token_t token = advance();
+    emit_numeric_literal(substring(token.start, token.length));
 }
 
 static void compile_boolean_literal() {
-    emit_boolean_literal(advance());
+    token_t token = advance();
+    emit_boolean_literal(substring(token.start, token.length));
 }
 
 static void compile_string_literal() {
-    emit_string_literal(advance());
+    token_t token = advance();
+    emit_string_literal(substring(token.start, token.length));
 }
