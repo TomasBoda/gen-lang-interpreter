@@ -364,7 +364,7 @@ static void run_return() {
 }
 
 static long get_label_ip(long label_index) {
-    long current_ip = vm.ip;
+    long current_ip = 0;
 
     while (current_ip < vm.bytecode->count) {
         if (vm.bytecode->instructions[current_ip] == OP_LABEL) {

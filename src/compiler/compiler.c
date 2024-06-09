@@ -103,6 +103,7 @@ static void compile_func_declaration();
 static void compile_func_declaration_param_list();
 static void compile_func_declaration_body();
 static void compile_conditional_statement();
+static void compile_while_statement();
 static void compile_return();
 static void compile_print();
 
@@ -229,6 +230,10 @@ static void compile_func_declaration_body() {
                 compile_conditional_statement();
                 break;
             }
+            case TOKEN_WHILE: {
+                compile_while_statement();
+                break;
+            }
             case TOKEN_PRINT: {
                 compile_print();
                 break;
@@ -265,8 +270,6 @@ static void compile_conditional_statement() {
 
     assert(TOKEN_CLOSE_BRACE);
 
-    // the only instruction that has its operand after the instruction type
-
     if (peek().type != TOKEN_ELSE) {
         emit(OP_LABEL);
         emit_numeric_literal_num((double)label_if_end);
@@ -290,6 +293,38 @@ static void compile_conditional_statement() {
 
     emit(OP_LABEL);
     emit_numeric_literal_num((double)label_else_end);
+}
+
+static void compile_while_statement() {
+    assert(TOKEN_WHILE);
+
+    long label_while_condition_start = get_label();
+    long label_while_body_end = get_label();
+
+    assert(TOKEN_OPEN_PAREN);
+
+    emit(OP_LABEL);
+    emit_numeric_literal_num((double)label_while_condition_start);
+
+    compile_expression();
+
+    emit_numeric_literal_num((double)label_while_body_end);
+    emit(OP_JUMP_IF_FALSE);
+
+    assert(TOKEN_CLOSE_PAREN);
+    assert(TOKEN_OPEN_BRACE);
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        compile_func_declaration_body();
+    }
+
+    assert(TOKEN_CLOSE_BRACE);
+
+    emit_numeric_literal_num((double)label_while_condition_start);
+    emit(OP_JUMP);
+
+    emit(OP_LABEL);
+    emit_numeric_literal_num((double)label_while_body_end);
 }
 
 static void compile_return() {

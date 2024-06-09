@@ -1,16 +1,9 @@
 
 func main() {
+    var i = 0;
 
-    if (false) {
-        print "true";
-    } else {
-        if (true) {
-            print "false true";
-        } else {
-            print "false false";
-            return 0;
-        }
+    while (i < 10) {
+        print i;
+        var i = i + 1;
     }
-
-    print "finished";
 }
