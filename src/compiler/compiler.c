@@ -12,10 +12,7 @@
 #include "utils/table.h"
 #include "utils/common.h"
 
-typedef struct {
-    bytecode_t* bytecode;
-    token_t current_token;
-} compiler_t;
+static bool DEBUG = false;
 
 compiler_t compiler;
 
@@ -32,19 +29,29 @@ static void emit(byte_t instruction) {
 static void emit_numeric_literal(char* raw_value) {
     emit(OP_LOAD_NUM_CONST);
 
-    double value = atof(raw_value);
+    value_t value;
+    value.type = TYPE_NUMBER;
+    value.as.number = atof(raw_value);
 
-    byte_t* bytes = double_to_bytes(value);
-    for (int i = 0; i < 8; i++) {
+    uint16_t value_index = pool_add(compiler.pool, value);
+    
+    byte_t* bytes = uint16_to_bytes(value_index);
+    for (int i = 0; i < 2; i++) {
         emit(bytes[i]);
     }
 }
 
-static void emit_numeric_literal_num(double value) {
+static void emit_numeric_literal_num(double numeric_value) {
     emit(OP_LOAD_NUM_CONST);
 
-    byte_t* bytes = double_to_bytes(value);
-    for (int i = 0; i < 8; i++) {
+    value_t value;
+    value.type = TYPE_NUMBER;
+    value.as.number = numeric_value;
+
+    uint16_t value_index = pool_add(compiler.pool, value);
+    
+    byte_t* bytes = uint16_to_bytes(value_index);
+    for (int i = 0; i < 2; i++) {
         emit(bytes[i]);
     }
 }
@@ -59,27 +66,45 @@ static void emit_boolean_literal(char* raw_value) {
 static void emit_string_literal(char* raw_value) {
     emit(OP_LOAD_STR_CONST);
 
-    size_t instruction_count;
-    byte_t* instructions = string_to_bytes(raw_value, &instruction_count);
+    value_t value;
+    value.type = TYPE_STRING;
+    value.as.string = raw_value;
 
-    for (size_t i = 0; i < instruction_count; i++) {
-        emit(instructions[i]);
+    uint16_t value_index = pool_add(compiler.pool, value);
+    
+    byte_t* bytes = uint16_to_bytes(value_index);
+    for (int i = 0; i < 2; i++) {
+        emit(bytes[i]);
     }
 }
 
 static double get_main_func_ip() {
     for (int i = 0; i < compiler.bytecode->count; i++) {
+        if (compiler.bytecode->instructions[i] == OP_LOAD_NUM_CONST) {
+            i += 2;
+            continue;
+        }
+
+        if (compiler.bytecode->instructions[i] == OP_LOAD_BOOL_CONST) {
+            i += 1;
+            continue;
+        }
+
         if (compiler.bytecode->instructions[i] == OP_LOAD_STR_CONST) {
-            byte_t size = compiler.bytecode->instructions[i + 1];
-            byte_t bytes[size];
-            for (int j = 0; j < size; j++) {
-                bytes[j] = compiler.bytecode->instructions[i + 2 + j];
+            i++;
+
+            byte_t bytes[2];
+            for (int j = 0; j < 2; j++) {
+                bytes[j] = compiler.bytecode->instructions[i + j];
             }
 
-            char* identifier = bytes_to_string(bytes, size);
+            i += 2;
 
-            if (strcmp(identifier, "main") == 0 && compiler.bytecode->instructions[i + 1 + size + 1] == OP_FUNC_DEF) {
-                return (double)(i + 1 + size + 1 + 1);
+            uint16_t index = bytes_to_uint16(bytes);
+            value_t* value = pool_get(compiler.pool, index);
+
+            if (value->type == TYPE_STRING && strcmp(value->as.string, "main") == 0 && compiler.bytecode->instructions[i] == OP_FUNC_DEF) {
+                return (double)(i + 1);
             }
         }
     }
@@ -111,7 +136,7 @@ static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
 static void compile_call_expression();
-static size_t compile_call_expression_args();
+static double compile_call_expression_args();
 static void compile_primary_expression();
 static void compile_identifier();
 static void compile_numeric_literal();
@@ -147,6 +172,7 @@ static token_t assert(token_type type) {
 void compiler_init() {
     compiler.bytecode = bytecode_init();
     compiler.current_token = lexer_get_token();
+    compiler.pool = pool_init(50);
 }
 
 bytecode_t* compile() {
@@ -170,7 +196,13 @@ bytecode_t* compile() {
     return compiler.bytecode;
 }
 
+pool_t* compiler_get_pool() {
+    return compiler.pool;
+}
+
 static void compile_var_declaration() {
+    if (DEBUG == true) printf("Compiling compile_var_declaration\n");
+
     assert(TOKEN_VAR);
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
     assert(TOKEN_ASSIGNMENT);
@@ -183,6 +215,8 @@ static void compile_var_declaration() {
 }
 
 static void compile_func_declaration() {
+    if (DEBUG == true) printf("Compiling compile_func_declaration\n");
+
     assert(TOKEN_FUNC);
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
 
@@ -205,6 +239,8 @@ static void compile_func_declaration() {
 }
 
 static void compile_func_declaration_param_list() {
+    if (DEBUG == true) printf("Compiling compile_func_declaration_param_list\n");
+
     while (peek().type != TOKEN_CLOSE_PAREN) {
         assert(TOKEN_VAR);
         token_t identifier_token = assert(TOKEN_IDENTIFIER);
@@ -219,6 +255,8 @@ static void compile_func_declaration_param_list() {
 }
 
 static void compile_func_declaration_body() {
+    if (DEBUG == true) printf("Compiling compile_func_declaration_body\n");
+
     while (peek().type != TOKEN_CLOSE_BRACE) {
         switch (peek().type) {
             case TOKEN_VAR: {
@@ -254,6 +292,8 @@ static void compile_func_declaration_body() {
 }
 
 static void compile_conditional_statement() {
+    if (DEBUG == true) printf("Compiling compile_conditional_statement\n");
+
     assert(TOKEN_IF);
     assert(TOKEN_OPEN_PAREN);
     compile_expression();
@@ -299,6 +339,8 @@ static void compile_conditional_statement() {
 }
 
 static void compile_while_statement() {
+    if (DEBUG == true) printf("Compiling compile_while_statement\n");
+
     assert(TOKEN_WHILE);
 
     long label_while_condition_start = get_label();
@@ -331,6 +373,8 @@ static void compile_while_statement() {
 }
 
 static void compile_call_statement() {
+    if (DEBUG == true) printf("Compiling compile_call_statement\n");
+
     compile_call_expression();
     assert(TOKEN_SEMICOLON);
 
@@ -339,6 +383,8 @@ static void compile_call_statement() {
 }
 
 static void compile_return() {
+    if (DEBUG == true) printf("Compiling compile_return\n");
+
     assert(TOKEN_RETURN);
 
     if (peek().type == TOKEN_SEMICOLON) {
@@ -352,6 +398,8 @@ static void compile_return() {
 }
 
 static void compile_print() {
+    if (DEBUG == true) printf("Compiling compile_print\n");
+
     assert(TOKEN_PRINT);
 
     compile_expression();
@@ -361,10 +409,14 @@ static void compile_print() {
 }
 
 static void compile_expression() {
+    if (DEBUG == true) printf("Compiling compile_expression\n");
+
     compile_logical_expression();
 }
 
 static void compile_logical_expression() {
+    if (DEBUG == true) printf("Compiling compile_logical_expression\n");
+
     compile_relational_expression();
 
     while (peek().type == TOKEN_AND || peek().type == TOKEN_OR) {
@@ -376,6 +428,8 @@ static void compile_logical_expression() {
 }
 
 static void compile_logical_operator(token_t operator_token) {
+    if (DEBUG == true) printf("Compiling compile_logical_operator\n");
+
     switch (operator_token.type) {
         case TOKEN_AND:
             return emit(OP_AND);
@@ -387,6 +441,8 @@ static void compile_logical_operator(token_t operator_token) {
 }
 
 static void compile_relational_expression() {
+    if (DEBUG == true) printf("Compiling compile_relational_expression\n");
+
     compile_additive_expression();
 
     if (peek().type == TOKEN_EQ || peek().type == TOKEN_NE || peek().type == TOKEN_GT || peek().type == TOKEN_GE || peek().type == TOKEN_LT || peek().type == TOKEN_LE) {
@@ -398,6 +454,8 @@ static void compile_relational_expression() {
 }
 
 static void compile_relational_operator(token_t operator_token) {
+    if (DEBUG == true) printf("Compiling compile_relational_operator\n");
+
     switch (operator_token.type) {
         case TOKEN_EQ:
             return emit(OP_CMP_EQ);
@@ -417,6 +475,8 @@ static void compile_relational_operator(token_t operator_token) {
 }
 
 static void compile_additive_expression() {
+    if (DEBUG == true) printf("Compiling compile_additive_expression\n");
+
     compile_multiplicative_expression();
 
     while (peek().type == TOKEN_PLUS || peek().type == TOKEN_MINUS) {
@@ -428,6 +488,8 @@ static void compile_additive_expression() {
 }
 
 static void compile_multiplicative_expression() {
+    if (DEBUG == true) printf("Compiling compile_multiplicative_expression\n");
+
     compile_call_expression();
 
     while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
@@ -439,6 +501,8 @@ static void compile_multiplicative_expression() {
 }
 
 static void compile_binary_operator(token_t operator_token) {
+    if (DEBUG == true) printf("Compiling compile_binary_operator\n");
+
     switch (operator_token.type) {
         case TOKEN_PLUS:
             return emit(OP_ADD);
@@ -454,20 +518,24 @@ static void compile_binary_operator(token_t operator_token) {
 }
 
 static void compile_call_expression() {
+    if (DEBUG == true) printf("Compiling compile_call_expression\n");
+
     compile_primary_expression();
 
     if (peek().type == TOKEN_OPEN_PAREN) {
         advance();
-        size_t arg_count = compile_call_expression_args();
+        double arg_count = compile_call_expression_args();
         assert(TOKEN_CLOSE_PAREN);
 
-        emit_numeric_literal_num((double)arg_count);
+        emit_numeric_literal_num(arg_count);
         emit(OP_CALL);
     }
 }
 
-static size_t compile_call_expression_args() {
-    size_t arg_count = 0;
+static double compile_call_expression_args() {
+    if (DEBUG == true) printf("Compiling compile_call_expression_args\n");
+
+    double arg_count = 0;
 
     while (peek().type != TOKEN_CLOSE_PAREN) {
         compile_expression();
@@ -482,6 +550,8 @@ static size_t compile_call_expression_args() {
 }
 
 static void compile_primary_expression() {
+    if (DEBUG == true) printf("Compiling compile_primary_expression\n");
+
     switch (peek().type) {
         case TOKEN_OPEN_PAREN:
             return compile_parenthesised_expression();
@@ -499,12 +569,16 @@ static void compile_primary_expression() {
 }
 
 static void compile_parenthesised_expression() {
+    if (DEBUG == true) printf("Compiling compile_parenthesised_expression\n");
+
     assert(TOKEN_OPEN_PAREN);
     compile_expression();
     assert(TOKEN_CLOSE_PAREN);
 }
 
 static void compile_identifier() {
+    if (DEBUG == true) printf("Compiling compile_identifier\n");
+
     token_t token = assert(TOKEN_IDENTIFIER);
 
     emit_string_literal(substring(token.start, token.length));
@@ -512,16 +586,22 @@ static void compile_identifier() {
 }
 
 static void compile_numeric_literal() {
+    if (DEBUG == true) printf("Compiling compile_numeric_literal\n");
+
     token_t token = advance();
     emit_numeric_literal(substring(token.start, token.length));
 }
 
 static void compile_boolean_literal() {
+    if (DEBUG == true) printf("Compiling compile_boolean_literal\n");
+
     token_t token = advance();
     emit_boolean_literal(substring(token.start, token.length));
 }
 
 static void compile_string_literal() {
+    if (DEBUG == true) printf("Compiling compile_string_literal\n");
+
     token_t token = advance();
     emit_string_literal(substring(token.start, token.length));
 }

@@ -22,6 +22,23 @@ double bytes_to_double(byte_t* bytes) {
     return value;
 }
 
+byte_t* uint16_to_bytes(uint16_t value) {
+    byte_t* bytes = (byte_t*)malloc(2 * sizeof(byte_t));
+
+    if (bytes == NULL) {
+        error_throw(ERROR_RUNTIME, "Failed to allocate bytes for a uint16", 0);
+    }
+
+    memcpy(bytes, &value, sizeof(uint16_t));
+    return bytes;
+}
+
+uint16_t bytes_to_uint16(byte_t* bytes) {
+    uint16_t value;
+    memcpy(&value, bytes, sizeof(uint16_t));
+    return value;
+}
+
 byte_t* string_to_bytes(const char* str, size_t* size) {
     size_t str_len = strlen(str);
 

@@ -104,39 +104,37 @@ static void print_bytecode(bytecode_t* bytecode) {
             case OP_LOAD_NUM_CONST: {
                 printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
 
-                byte_t bytes[8];
-                for (int j = i; j < i + 8; j++) {
+                byte_t bytes[2];
+                for (int j = i; j < i + 2; j++) {
                     bytes[j - i] = bytecode->instructions[j];
                 }
 
-                double value = bytes_to_double(bytes);
+                printf("%d: %d\n", op_index + 1, bytes[0]);
+                printf("%d: %d\n", op_index + 2, bytes[1]);
 
-                if (value == (int)value) {
-                    printf("%d: %d\n", op_index + 1, (int)value);
-                } else {
-                    printf("%d: %.2f\n", op_index + 1, value);
-                }
-
-                i += 7;
-                break;
-            }
-            case OP_LOAD_BOOL_CONST: {
-                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
-                byte_t value = bytecode->instructions[i];
-                printf(value == 1 ? "%d: true\n" : "%d: false\n", op_index + 1);
+                i += 1;
                 break;
             }
             case OP_LOAD_STR_CONST: {
                 printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
-                byte_t size = bytecode->instructions[i++];
-                byte_t* bytes = (byte_t*)malloc(size * sizeof(byte_t));
 
-                for (int j = i; j < i + size + 1; j++) {
+                byte_t bytes[2];
+                for (int j = i; j < i + 2; j++) {
                     bytes[j - i] = bytecode->instructions[j];
                 }
 
-                printf("%d: %s\n", op_index + 2, bytes_to_string(bytes, size));
-                i += size - 1;
+                printf("%d: %d\n", op_index + 1, bytes[0]);
+                printf("%d: %d\n", op_index + 2, bytes[1]);
+
+                i += 1;
+                break;
+            }
+            case OP_LOAD_BOOL_CONST: {
+                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
+
+                byte_t bool_value = bytecode->instructions[i];
+                printf("%d: %s\n", op_index + 1, bool_value == 1 ? "true" : "false");
+
                 break;
             }
             default: {

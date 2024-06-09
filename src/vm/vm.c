@@ -8,17 +8,10 @@
 #include "utils/common.h"
 #include "utils/error.h"
 #include "vm/callstack.h"
+#include "vm/vm.h"
+#include "vm/pool.h"
 
-bool DEBUG = false;
-
-typedef struct {
-    long ip;
-    value_t stack[256];
-    value_t* stack_top;
-    bytecode_t* bytecode;
-    table_t* table;
-    call_stack_t* call_stack;
-} virtual_machine_t;
+static bool DEBUG = false;
 
 virtual_machine_t vm;
 
@@ -151,6 +144,7 @@ void vm_init(bytecode_t* bytecode) {
 
     vm.table = table_init(50);
     vm.call_stack = call_stack_init();
+    vm.pool = compiler_get_pool();
 }
 
 static void vm_free() {
@@ -192,14 +186,20 @@ void vm_run() {
 static void run_load_num_const() {
     if (DEBUG == true) printf("Running run_load_num_const\n");
 
-    byte_t bytes[8];
+    byte_t bytes[2];
 
-    for (size_t i = 0; i < 8; i++) {
+    for (size_t i = 0; i < 2; i++) {
         bytes[i] = next();
     }
 
-    double numeric_literal = bytes_to_double(bytes);
-    stack_push(value_create_number(numeric_literal));
+    uint16_t pool_index = bytes_to_uint16(bytes);
+    value_t* value = pool_get(vm.pool, pool_index);
+
+    if (value->type != TYPE_NUMBER) {
+        return error_throw(ERROR_RUNTIME, "Value retrieved from pool is not a number", 0);
+    }
+
+    stack_push(*value);
 }
 
 static void run_load_bool_const() {
@@ -212,19 +212,20 @@ static void run_load_bool_const() {
 static void run_load_str_const() {
     if (DEBUG == true) printf("Running run_load_str_const\n");
 
-    byte_t string_size = next();
-    char* string_literal = (char*)malloc(sizeof(char) * string_size);
+    byte_t bytes[2];
 
-    if (string_literal == NULL) {
-        error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", 0);
-        return;
+    for (size_t i = 0; i < 2; i++) {
+        bytes[i] = next();
     }
 
-    for (int i = 0; i < string_size; i++) {
-        string_literal[i] = (char)next();
+    uint16_t pool_index = bytes_to_uint16(bytes);
+    value_t* value = pool_get(vm.pool, pool_index);
+
+    if (value->type != TYPE_STRING) {
+        return error_throw(ERROR_RUNTIME, "Value retrieved from pool is not a string", 0);
     }
 
-    stack_push(value_create_string(string_literal));
+    stack_push(*value);
 }
 
 static value_t* load_global_var(char* identifier) {
@@ -298,7 +299,7 @@ static void run_func_def() {
     while (vm.ip < vm.bytecode->count) {
         if (current() == OP_LOAD_NUM_CONST) {
             next();
-            vm.ip += 8;
+            vm.ip += 2;
             continue;
         }
 
@@ -310,8 +311,7 @@ static void run_func_def() {
 
         if (current() == OP_LOAD_STR_CONST) {
             next();
-            byte_t size = next();
-            vm.ip += size;
+            vm.ip += 2;
             continue;
         }
 
@@ -377,19 +377,43 @@ static inline long get_label_ip(long label_index) {
     while (current_ip < vm.bytecode->count) {
         if (vm.bytecode->instructions[current_ip] == OP_LABEL) {
             if (vm.bytecode->instructions[++current_ip] == OP_LOAD_NUM_CONST) {
-                byte_t bytes[8];
-                for (int i = 0; i < 8; i++) {
-                    bytes[i] = vm.bytecode->instructions[current_ip + 1 + i];
+                current_ip++;
+
+                byte_t bytes[2];
+                for (int i = 0; i < 2; i++) {
+                    bytes[i] = vm.bytecode->instructions[current_ip + i];
                 }
 
-                long found_label_index = (long) bytes_to_double(bytes);
-                current_ip += 8;
+                uint16_t pool_index = bytes_to_uint16(bytes);
+                value_t* value = pool_get(vm.pool, pool_index);
+
+                if (value->type != TYPE_NUMBER) {
+                    error_throw(ERROR_RUNTIME, "get_label_ip pool value is not a number", 0);
+                }
+
+                long found_label_index = (long)value->as.number;
+                current_ip += 1;
 
                 if (found_label_index == label_index) {
                     return current_ip + 1;
                 }
             }
         } else {
+            if (vm.bytecode->instructions[current_ip] == OP_LOAD_NUM_CONST) {
+                current_ip += 3;
+                continue;
+            }
+
+            if (vm.bytecode->instructions[current_ip] == OP_LOAD_BOOL_CONST) {
+                current_ip += 2;
+                continue;
+            }
+
+            if (vm.bytecode->instructions[current_ip] == OP_LOAD_STR_CONST) {
+                current_ip += 3;
+                continue;
+            }
+
             current_ip++;
         }
     }
@@ -433,7 +457,7 @@ static void run_jump() {
 
 static void run_label() {
     if (DEBUG == true) printf("Running run_label\n");
-    vm.ip += 9;
+    vm.ip += 3;
 }
 
 static void run_add() {
