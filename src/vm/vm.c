@@ -34,10 +34,22 @@ static void run_func_end();
 static void run_call();
 static void run_return();
 
+static void run_jump_if_false();
+static void run_label();
+
 static void run_add();
 static void run_sub();
 static void run_mul();
 static void run_div();
+static void run_cmp_eq();
+static void run_cmp_ne();
+static void run_cmp_gt();
+static void run_cmp_ge();
+static void run_cmp_lt();
+static void run_cmp_le();
+
+static void run_and();
+static void run_or();
 
 static void run_print();
 static void run_print_numeric_literal(value_t* value);
@@ -210,6 +222,14 @@ void vm_run() {
                 run_return();
                 break;
             }
+            case OP_JUMP_IF_FALSE: {
+                run_jump_if_false();
+                break;
+            }
+            case OP_LABEL: {
+                run_label();
+                break;
+            }
             case OP_ADD: {
                 run_add();
                 break;
@@ -224,6 +244,38 @@ void vm_run() {
             }
             case OP_DIV: {
                 run_div();
+                break;
+            }
+            case OP_CMP_EQ: {
+                run_cmp_eq();
+                break;
+            }
+            case OP_CMP_NE: {
+                run_cmp_ne();
+                break;
+            }
+            case OP_CMP_GT: {
+                run_cmp_gt();
+                break;
+            }
+            case OP_CMP_GE: {
+                run_cmp_ge();
+                break;
+            }
+            case OP_CMP_LT: {
+                run_cmp_lt();
+                break;
+            }
+            case OP_CMP_LE: {
+                run_cmp_le();
+                break;
+            }
+            case OP_AND: {
+                run_and();
+                break;
+            }
+            case OP_OR: {
+                run_or();
                 break;
             }
             case OP_PRINT: {
@@ -403,6 +455,58 @@ static void run_return() {
     }
 }
 
+static long get_label_ip(long label_index) {
+    long current_ip = vm.ip;
+
+    while (current_ip < vm.bytecode->count) {
+        if (vm.bytecode->instructions[current_ip] == OP_LABEL) {
+            if (vm.bytecode->instructions[++current_ip] == OP_LOAD_NUM_CONST) {
+                byte_t bytes[8];
+                for (int i = 0; i < 8; i++) {
+                    bytes[i] = vm.bytecode->instructions[current_ip + 1 + i];
+                }
+
+                long found_label_index = (long) bytes_to_double(bytes);
+                current_ip += 8;
+
+                if (found_label_index == label_index) {
+                    return current_ip + 1;
+                }
+            }
+        } else {
+            current_ip++;
+        }
+    }
+
+    error_throw(ERROR_RUNTIME, "Could not find a label with the given label index", 0);
+    return 0;
+}
+
+static void run_jump_if_false() {
+    if (DEBUG == true) printf("Running run_jump_if_false\n");
+
+    value_t label_index_value = stack_pop();
+    value_t boolean_value = stack_pop();
+
+    if (label_index_value.type != TYPE_NUMBER) {
+        return error_throw(ERROR_RUNTIME, "Label index is not a number", 0);
+    }
+
+    if (boolean_value.type != TYPE_BOOLEAN) {
+        return error_throw(ERROR_RUNTIME, "Jump if false operand is not a boolean", 0);
+    }
+
+    if (boolean_value.as.boolean == false) {
+        long jump_ip = get_label_ip((long)label_index_value.as.number);
+        vm.ip = jump_ip;
+    }
+}
+
+static void run_label() {
+    if (DEBUG == true) printf("Running run_label\n");
+    vm.ip += 9;
+}
+
 static void run_add() {
     if (DEBUG == true) printf("Running run_add\n");
 
@@ -465,6 +569,216 @@ static void run_div() {
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
     stack_push(create_numeric_literal(value2.as.number / value1.as.number));
+}
+
+static void run_cmp_eq() {
+    if (DEBUG == true) printf("Running run_cmp_eq\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_eq two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number == value1.as.number));
+            break;
+        }
+        case TYPE_BOOLEAN: {
+            stack_push(create_boolean_literal(value2.as.boolean == value1.as.boolean));
+            break;
+        }
+        case TYPE_STRING: {
+            size_t strlen1 = strlen(value1.as.string);
+            size_t strlen2 = strlen(value2.as.string);
+
+            if (strlen1 != strlen2) {
+                stack_push(create_boolean_literal(false));
+                break;
+            }
+
+            bool strings_equal = strcmp(value2.as.string, value1.as.string) == 0;
+            stack_push(create_boolean_literal(strings_equal));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_eq", 0);
+        }
+    }
+}
+
+static void run_cmp_ne() {
+    if (DEBUG == true) printf("Running run_cmp_ne\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_ne two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number != value1.as.number));
+            break;
+        }
+        case TYPE_BOOLEAN: {
+            stack_push(create_boolean_literal(value2.as.boolean != value1.as.boolean));
+            break;
+        }
+        case TYPE_STRING: {
+            size_t strlen1 = strlen(value1.as.string);
+            size_t strlen2 = strlen(value2.as.string);
+
+            if (strlen1 != strlen2) {
+                stack_push(create_boolean_literal(true));
+                break;
+            }
+
+            bool strings_equal = strcmp(value2.as.string, value1.as.string) != 0;
+            stack_push(create_boolean_literal(strings_equal));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ne", 0);
+        }
+    }
+}
+
+static void run_cmp_gt() {
+    if (DEBUG == true) printf("Running run_cmp_gt\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_gt two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number > value1.as.number));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_gt", 0);
+        }
+    }
+}
+
+static void run_cmp_ge() {
+    if (DEBUG == true) printf("Running run_cmp_ge\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_ge two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number >= value1.as.number));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ge", 0);
+        }
+    }
+}
+
+static void run_cmp_lt() {
+    if (DEBUG == true) printf("Running run_cmp_lt\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_lt two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number < value1.as.number));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_lt", 0);
+        }
+    }
+}
+
+static void run_cmp_le() {
+    if (DEBUG == true) printf("Running run_cmp_le\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot cmp_le two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(create_boolean_literal(value2.as.number <= value1.as.number));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_le", 0);
+        }
+    }
+}
+
+static void run_and() {
+    if (DEBUG == true) printf("Running run_and\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot and two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_BOOLEAN: {
+            stack_push(create_boolean_literal(value2.as.boolean && value1.as.boolean));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for and", 0);
+        }
+    }
+}
+
+static void run_or() {
+    if (DEBUG == true) printf("Running run_or\n");
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type != value1.type) {
+        error_throw(ERROR_RUNTIME, "Cannot or two values of different datatypes", 0);
+        return;
+    }
+
+    switch (value1.type) {
+        case TYPE_BOOLEAN: {
+            stack_push(create_boolean_literal(value2.as.boolean || value1.as.boolean));
+            break;
+        }
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for or", 0);
+        }
+    }
 }
 
 static void run_print() {

@@ -82,14 +82,16 @@ void interpret() {
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
-    return;
+    //return;
 
     printf("BYTECODE --------------------\n");
 
     for (int i = 0; i < bytecode->count; ++i) {
+        int op_index = i;
+
         switch (bytecode->instructions[i]) {
             case OP_LOAD_NUM_CONST: {
-                printf("%s\n", OP_CODE_LABELS[bytecode->instructions[i++]]);
+                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
 
                 byte_t bytes[8];
                 for (int j = i; j < i + 8; j++) {
@@ -108,13 +110,13 @@ static void print_bytecode(bytecode_t* bytecode) {
                 break;
             }
             case OP_LOAD_BOOL_CONST: {
-                printf("%s\n", OP_CODE_LABELS[bytecode->instructions[i++]]);
+                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
                 byte_t value = bytecode->instructions[i];
                 printf(value == 1 ? "true\n" : "false\n");
                 break;
             }
             case OP_LOAD_STR_CONST: {
-                printf("%s\n", OP_CODE_LABELS[bytecode->instructions[i++]]);
+                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
                 byte_t size = bytecode->instructions[i++];
                 byte_t* bytes = (byte_t*)malloc(size * sizeof(byte_t));
 
@@ -127,7 +129,7 @@ static void print_bytecode(bytecode_t* bytecode) {
                 break;
             }
             default: {
-                printf("%s\n", OP_CODE_LABELS[bytecode->instructions[i]]);
+                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i]]);
                 break;
             }
         }

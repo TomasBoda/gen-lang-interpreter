@@ -19,6 +19,11 @@ typedef struct {
 
 compiler_t compiler;
 
+long label_index = 0;
+static long get_label() {
+    return label_index++;
+}
+
 static void emit(byte_t instruction) {
     bytecode_add(compiler.bytecode, instruction);
 }
@@ -97,6 +102,7 @@ static void compile_var_declaration();
 static void compile_func_declaration();
 static void compile_func_declaration_param_list();
 static void compile_func_declaration_body();
+static void compile_conditional_statement();
 static void compile_return();
 static void compile_print();
 
@@ -133,6 +139,7 @@ static token_t assert(token_type type) {
     token_t token = advance();
 
     if (token.type != type) {
+        printf("expected = %d, actual = %d\n", type, token.type);
         error_throw(ERROR_COMPILER, "token assertion failed", token.line);
     }
 
@@ -177,7 +184,6 @@ static void compile_var_declaration() {
     emit(OP_STORE_VAR);
 }
 
-// TODO
 static void compile_func_declaration() {
     assert(TOKEN_FUNC);
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
@@ -220,6 +226,10 @@ static void compile_func_declaration_body() {
                 compile_var_declaration();
                 break;
             }
+            case TOKEN_IF: {
+                compile_conditional_statement();
+                break;
+            }
             case TOKEN_PRINT: {
                 compile_print();
                 break;
@@ -234,6 +244,29 @@ static void compile_func_declaration_body() {
             }
         }
     }
+}
+
+static void compile_conditional_statement() {
+    assert(TOKEN_IF);
+    assert(TOKEN_OPEN_PAREN);
+    compile_expression();
+
+    long label_if_end = get_label();
+    emit_numeric_literal_num((double)label_if_end);
+    emit(OP_JUMP_IF_FALSE);
+
+    assert(TOKEN_CLOSE_PAREN);
+    assert(TOKEN_OPEN_BRACE);
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        compile_func_declaration_body();
+    }
+
+    assert(TOKEN_CLOSE_BRACE);
+
+    // the only instruction that has its operand after the instruction type
+    emit(OP_LABEL);
+    emit_numeric_literal_num((double)label_if_end);
 }
 
 static void compile_return() {

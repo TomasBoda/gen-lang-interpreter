@@ -76,6 +76,8 @@ static token_t make_token(token_type type) {
         token.length -= 2;
     }
 
+    //printf("token type = %d token value = %s\n", token.type, substring(token.start, token.length));
+
     return token;
 }
 
@@ -207,7 +209,7 @@ token_t lexer_get_token() {
         case '*': return make_token(TOKEN_STAR);
         case '/': return make_token(TOKEN_SLASH);
         case '=': return make_token(match('=') ? TOKEN_EQ : TOKEN_ASSIGNMENT);
-        case '!': return make_token(match('=') ? TOKEN_EMPHASIS : TOKEN_NE);
+        case '!': return make_token(match('=') ? TOKEN_NE : TOKEN_EMPHASIS);
         case '<': return make_token(match('=') ? TOKEN_LE : TOKEN_LT);
         case '>': return make_token(match('=') ? TOKEN_GE : TOKEN_GT);
         case '"': return string();
