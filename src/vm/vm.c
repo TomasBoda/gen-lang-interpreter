@@ -57,6 +57,8 @@ static void run_print_numeric_literal(value_t* value);
 static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
 
+static void run_stack_clear();
+
 static void run_not_implemented() {
     error_throw(ERROR_RUNTIME, "Unrecognized instruction", 0);
 }
@@ -111,50 +113,35 @@ instruction_handler instruction_handlers[OP_NUM_INSTRUCTIONS] = {
     run_or,                     // OP_OR
 
     run_print,                  // OP_PRINT
-    run_not_implemented         // OP_NEWLINE
+    run_not_implemented,        // OP_NEWLINE
+
+    run_stack_clear,            // OP_STACK_CLEAR
 };
 
-static byte_t current() {
+static inline byte_t current() {
     return vm.bytecode->instructions[vm.ip];
 }
 
-static byte_t next() {
+static inline byte_t next() {
     return vm.bytecode->instructions[vm.ip++];
 }
 
-static byte_t has_next() {
+static inline byte_t has_next() {
     return vm.ip < vm.bytecode->count;
 }
 
-void stack_push(value_t value) {
+static inline void stack_push(value_t value) {
+    if (vm.stack_top == vm.stack + 256) {
+        error_throw(ERROR_RUNTIME, "Stack overflow (max capacity = 256)", 0);
+    }
+
     *vm.stack_top = value;
     vm.stack_top++;
 }
 
-value_t stack_pop() {
+static inline value_t stack_pop() {
     vm.stack_top--;
     return *vm.stack_top;
-}
-
-static value_t create_numeric_literal(double numeric_literal) {
-    value_t value;
-    value.type = TYPE_NUMBER;
-    value.as.number = numeric_literal;
-    return value;
-}
-
-static value_t create_boolean_literal(bool boolean_literal) {
-    value_t value;
-    value.type = TYPE_BOOLEAN;
-    value.as.boolean = boolean_literal;
-    return value;
-}
-
-static value_t create_string_literal(char* string_literal) {
-    value_t value;
-    value.type = TYPE_STRING;
-    value.as.string = string_literal;
-    return value;
 }
 
 void vm_init(bytecode_t* bytecode) {
@@ -212,14 +199,14 @@ static void run_load_num_const() {
     }
 
     double numeric_literal = bytes_to_double(bytes);
-    stack_push(create_numeric_literal(numeric_literal));
+    stack_push(value_create_number(numeric_literal));
 }
 
 static void run_load_bool_const() {
     if (DEBUG == true) printf("Running run_load_bool_const\n");
 
     byte_t boolean_literal = next();
-    stack_push(create_boolean_literal(boolean_literal == 1));
+    stack_push(value_create_boolean(boolean_literal == 1));
 }
 
 static void run_load_str_const() {
@@ -237,7 +224,7 @@ static void run_load_str_const() {
         string_literal[i] = (char)next();
     }
 
-    stack_push(create_string_literal(string_literal));
+    stack_push(value_create_string(string_literal));
 }
 
 static value_t* load_global_var(char* identifier) {
@@ -308,11 +295,33 @@ static void run_func_def() {
     value_t func_identifier = stack_pop();
     table_set(vm.table, func_identifier.as.string, value_create_number(vm.ip));
 
-    while (current() != OP_FUNC_END) {
-        next();
-    }
+    while (vm.ip < vm.bytecode->count) {
+        if (current() == OP_LOAD_NUM_CONST) {
+            next();
+            vm.ip += 8;
+            continue;
+        }
 
-    next();
+        if (current() == OP_LOAD_BOOL_CONST) {
+            next();
+            vm.ip += 1;
+            continue;
+        }
+
+        if (current() == OP_LOAD_STR_CONST) {
+            next();
+            byte_t size = next();
+            vm.ip += size;
+            continue;
+        }
+
+        if (current() == OP_FUNC_END) {
+            next();
+            break;
+        }
+
+        vm.ip += 1;
+    }
 }
 
 static void run_func_end() {
@@ -356,14 +365,13 @@ static void run_return() {
 
     call_frame_free(&call_frame);
 
+    // exit the virtual machine
     if (call_stack_current(vm.call_stack) == NULL) {
-        printf("--------------\n");
-        printf("INFO: Finished\n");
-        exit(0);
+        vm.ip = vm.bytecode->count;
     }
 }
 
-static long get_label_ip(long label_index) {
+static inline long get_label_ip(long label_index) {
     long current_ip = 0;
 
     while (current_ip < vm.bytecode->count) {
@@ -440,7 +448,7 @@ static void run_add() {
     }
 
     if (value2.type == TYPE_NUMBER && value1.type == TYPE_NUMBER) {
-        stack_push(create_numeric_literal(value2.as.number + value1.as.number));
+        stack_push(value_create_number(value2.as.number + value1.as.number));
         return;
     }
 
@@ -463,7 +471,7 @@ static void run_add() {
             new_string[strlen2 + i] = value1.as.string[i];
         }
 
-        stack_push(create_string_literal(new_string));
+        stack_push(value_create_string(new_string));
         return;
     }
 }
@@ -473,7 +481,7 @@ static void run_sub() {
 
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
-    stack_push(create_numeric_literal(value2.as.number - value1.as.number));
+    stack_push(value_create_number(value2.as.number - value1.as.number));
 }
 
 static void run_mul() {
@@ -481,7 +489,7 @@ static void run_mul() {
 
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
-    stack_push(create_numeric_literal(value2.as.number * value1.as.number));
+    stack_push(value_create_number(value2.as.number * value1.as.number));
 }
 
 static void run_div() {
@@ -489,7 +497,7 @@ static void run_div() {
 
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
-    stack_push(create_numeric_literal(value2.as.number / value1.as.number));
+    stack_push(value_create_number(value2.as.number / value1.as.number));
 }
 
 static void run_cmp_eq() {
@@ -505,11 +513,11 @@ static void run_cmp_eq() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number == value1.as.number));
+            stack_push(value_create_boolean(value2.as.number == value1.as.number));
             break;
         }
         case TYPE_BOOLEAN: {
-            stack_push(create_boolean_literal(value2.as.boolean == value1.as.boolean));
+            stack_push(value_create_boolean(value2.as.boolean == value1.as.boolean));
             break;
         }
         case TYPE_STRING: {
@@ -517,12 +525,12 @@ static void run_cmp_eq() {
             size_t strlen2 = strlen(value2.as.string);
 
             if (strlen1 != strlen2) {
-                stack_push(create_boolean_literal(false));
+                stack_push(value_create_boolean(false));
                 break;
             }
 
             bool strings_equal = strcmp(value2.as.string, value1.as.string) == 0;
-            stack_push(create_boolean_literal(strings_equal));
+            stack_push(value_create_boolean(strings_equal));
             break;
         }
         default: {
@@ -544,11 +552,11 @@ static void run_cmp_ne() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number != value1.as.number));
+            stack_push(value_create_boolean(value2.as.number != value1.as.number));
             break;
         }
         case TYPE_BOOLEAN: {
-            stack_push(create_boolean_literal(value2.as.boolean != value1.as.boolean));
+            stack_push(value_create_boolean(value2.as.boolean != value1.as.boolean));
             break;
         }
         case TYPE_STRING: {
@@ -556,12 +564,12 @@ static void run_cmp_ne() {
             size_t strlen2 = strlen(value2.as.string);
 
             if (strlen1 != strlen2) {
-                stack_push(create_boolean_literal(true));
+                stack_push(value_create_boolean(true));
                 break;
             }
 
             bool strings_equal = strcmp(value2.as.string, value1.as.string) != 0;
-            stack_push(create_boolean_literal(strings_equal));
+            stack_push(value_create_boolean(strings_equal));
             break;
         }
         default: {
@@ -583,7 +591,7 @@ static void run_cmp_gt() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number > value1.as.number));
+            stack_push(value_create_boolean(value2.as.number > value1.as.number));
             break;
         }
         default: {
@@ -605,7 +613,7 @@ static void run_cmp_ge() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number >= value1.as.number));
+            stack_push(value_create_boolean(value2.as.number >= value1.as.number));
             break;
         }
         default: {
@@ -627,7 +635,7 @@ static void run_cmp_lt() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number < value1.as.number));
+            stack_push(value_create_boolean(value2.as.number < value1.as.number));
             break;
         }
         default: {
@@ -649,7 +657,7 @@ static void run_cmp_le() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(create_boolean_literal(value2.as.number <= value1.as.number));
+            stack_push(value_create_boolean(value2.as.number <= value1.as.number));
             break;
         }
         default: {
@@ -671,7 +679,7 @@ static void run_and() {
 
     switch (value1.type) {
         case TYPE_BOOLEAN: {
-            stack_push(create_boolean_literal(value2.as.boolean && value1.as.boolean));
+            stack_push(value_create_boolean(value2.as.boolean && value1.as.boolean));
             break;
         }
         default: {
@@ -693,7 +701,7 @@ static void run_or() {
 
     switch (value1.type) {
         case TYPE_BOOLEAN: {
-            stack_push(create_boolean_literal(value2.as.boolean || value1.as.boolean));
+            stack_push(value_create_boolean(value2.as.boolean || value1.as.boolean));
             break;
         }
         default: {
@@ -743,4 +751,18 @@ static void run_print_string_literal(value_t* value) {
     if (DEBUG == true) printf("Running run_print_string_literal\n");
 
     printf("%s\n", value->as.string);
+}
+
+static void run_stack_clear() {
+    if (DEBUG == true) printf("Running run_stack_clear\n");
+
+    value_t stack_item_count = stack_pop();
+
+    if (stack_item_count.type != TYPE_NUMBER) {
+        return error_throw(ERROR_RUNTIME, "stack_item_count.type is not a number", 0);
+    }
+
+    for (int i = 0; i < (int)stack_item_count.as.number; i++) {
+        stack_pop();
+    }
 }

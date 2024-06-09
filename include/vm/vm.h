@@ -9,7 +9,4 @@
 void vm_init(bytecode_t* compiled_bytecode);
 void vm_run();
 
-void stack_push(value_t value);
-value_t stack_pop();
-
 #endif

@@ -20,6 +20,7 @@ typedef struct {
 compiler_t compiler;
 
 long label_index = 0;
+
 static long get_label() {
     return label_index++;
 }
@@ -32,8 +33,8 @@ static void emit_numeric_literal(char* raw_value) {
     emit(OP_LOAD_NUM_CONST);
 
     double value = atof(raw_value);
-    byte_t* bytes = double_to_bytes(value);
 
+    byte_t* bytes = double_to_bytes(value);
     for (int i = 0; i < 8; i++) {
         emit(bytes[i]);
     }
@@ -43,7 +44,6 @@ static void emit_numeric_literal_num(double value) {
     emit(OP_LOAD_NUM_CONST);
 
     byte_t* bytes = double_to_bytes(value);
-
     for (int i = 0; i < 8; i++) {
         emit(bytes[i]);
     }
@@ -52,11 +52,8 @@ static void emit_numeric_literal_num(double value) {
 static void emit_boolean_literal(char* raw_value) {
     emit(OP_LOAD_BOOL_CONST);
 
-    if (strcmp(raw_value, "true") == 0) {
-        emit(1);
-    } else {
-        emit(0);
-    }
+    bool value = strcmp(raw_value, "true") == 0;
+    emit(value ? 1 : 0);
 }
 
 static void emit_string_literal(char* raw_value) {
@@ -104,6 +101,7 @@ static void compile_func_declaration_param_list();
 static void compile_func_declaration_body();
 static void compile_conditional_statement();
 static void compile_while_statement();
+static void compile_call_statement();
 static void compile_return();
 static void compile_print();
 
@@ -199,7 +197,8 @@ static void compile_func_declaration() {
     compile_func_declaration_body();
     assert(TOKEN_CLOSE_BRACE);
 
-    emit_numeric_literal("0");
+    // explicitely emit 0 return
+    emit_numeric_literal_num(0);
     emit(OP_RETURN);
 
     emit(OP_FUNC_END);
@@ -240,6 +239,10 @@ static void compile_func_declaration_body() {
             }
             case TOKEN_RETURN: {
                 compile_return();
+                break;
+            }
+            case TOKEN_IDENTIFIER: {
+                compile_call_statement();
                 break;
             }
             default: {
@@ -327,9 +330,23 @@ static void compile_while_statement() {
     emit_numeric_literal_num((double)label_while_body_end);
 }
 
+static void compile_call_statement() {
+    compile_call_expression();
+    assert(TOKEN_SEMICOLON);
+
+    emit_numeric_literal_num(1);
+    emit(OP_STACK_CLEAR);
+}
+
 static void compile_return() {
     assert(TOKEN_RETURN);
-    compile_expression();
+
+    if (peek().type == TOKEN_SEMICOLON) {
+        emit_numeric_literal_num(0);
+    } else {
+        compile_expression();
+    }
+
     assert(TOKEN_SEMICOLON);
     emit(OP_RETURN);
 }
@@ -446,8 +463,6 @@ static void compile_call_expression() {
 
         emit_numeric_literal_num((double)arg_count);
         emit(OP_CALL);
-
-        // TODO: fix LOAD_LOCAL in identifier of call expression
     }
 }
 

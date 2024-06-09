@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include "lexer/lexer.h"
 #include "compiler/compiler.h"
@@ -61,6 +62,8 @@ const char* OP_CODE_LABELS[] = {
 
     "PRINT",
     "NEWLINE",
+
+    "STACK_CLEAR",
 };
 
 static void print_bytecode(bytecode_t* bytecode);
@@ -73,12 +76,20 @@ void interpreter_init(const char* source_code) {
 void interpret() {
     bytecode_t* bytecode = compile();
     printf("INFO: Compiled\n");
-    printf("--------------\n");
+    printf("------------------------------\n");
 
     print_bytecode(bytecode);
 
     vm_init(bytecode);
+
+    clock_t start = clock();
     vm_run();
+    clock_t end = clock();
+
+    double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;
+
+    printf("------------------------------\n");
+    printf("INFO: Finished in %.2fs\n", elapsed_time);
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
@@ -101,9 +112,9 @@ static void print_bytecode(bytecode_t* bytecode) {
                 double value = bytes_to_double(bytes);
 
                 if (value == (int)value) {
-                    printf("%d\n",  (int)value);
+                    printf("%d: %d\n", op_index + 1, (int)value);
                 } else {
-                    printf("%.2f\n", value);
+                    printf("%d: %.2f\n", op_index + 1, value);
                 }
 
                 i += 7;
@@ -112,7 +123,7 @@ static void print_bytecode(bytecode_t* bytecode) {
             case OP_LOAD_BOOL_CONST: {
                 printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
                 byte_t value = bytecode->instructions[i];
-                printf(value == 1 ? "true\n" : "false\n");
+                printf(value == 1 ? "%d: true\n" : "%d: false\n", op_index + 1);
                 break;
             }
             case OP_LOAD_STR_CONST: {
@@ -124,7 +135,7 @@ static void print_bytecode(bytecode_t* bytecode) {
                     bytes[j - i] = bytecode->instructions[j];
                 }
 
-                printf("%s\n", bytes_to_string(bytes, size));
+                printf("%d: %s\n", op_index + 2, bytes_to_string(bytes, size));
                 i += size - 1;
                 break;
             }
