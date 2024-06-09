@@ -139,7 +139,6 @@ static token_t assert(token_type type) {
     token_t token = advance();
 
     if (token.type != type) {
-        printf("expected = %d, actual = %d\n", type, token.type);
         error_throw(ERROR_COMPILER, "token assertion failed", token.line);
     }
 
@@ -252,6 +251,8 @@ static void compile_conditional_statement() {
     compile_expression();
 
     long label_if_end = get_label();
+    long label_else_end = get_label();
+
     emit_numeric_literal_num((double)label_if_end);
     emit(OP_JUMP_IF_FALSE);
 
@@ -265,8 +266,30 @@ static void compile_conditional_statement() {
     assert(TOKEN_CLOSE_BRACE);
 
     // the only instruction that has its operand after the instruction type
+
+    if (peek().type != TOKEN_ELSE) {
+        emit(OP_LABEL);
+        emit_numeric_literal_num((double)label_if_end);
+        return;
+    }
+
+    emit_numeric_literal_num((double)label_else_end);
+    emit(OP_JUMP);
+
     emit(OP_LABEL);
     emit_numeric_literal_num((double)label_if_end);
+
+    assert(TOKEN_ELSE);
+    assert(TOKEN_OPEN_BRACE);
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        compile_func_declaration_body();
+    }
+
+    assert(TOKEN_CLOSE_BRACE);
+
+    emit(OP_LABEL);
+    emit_numeric_literal_num((double)label_else_end);
 }
 
 static void compile_return() {

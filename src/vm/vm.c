@@ -35,6 +35,7 @@ static void run_call();
 static void run_return();
 
 static void run_jump_if_false();
+static void run_jump();
 static void run_label();
 
 static void run_add();
@@ -89,7 +90,7 @@ instruction_handler instruction_handlers[OP_NUM_INSTRUCTIONS] = {
     run_not_implemented,        // OP_SIZE_OF
 
     run_label,                  // OP_LABEL
-    run_not_implemented,        // OP_JUMP
+    run_jump,                   // OP_JUMP
     run_jump_if_false,          // OP_JUMP_IF_FALSE
 
     run_add,                    // OP_ADD
@@ -407,6 +408,19 @@ static void run_jump_if_false() {
         long jump_ip = get_label_ip((long)label_index_value.as.number);
         vm.ip = jump_ip;
     }
+}
+
+static void run_jump() {
+    if (DEBUG == true) printf("Running run_jump\n");
+
+    value_t label_index_value = stack_pop();
+
+    if (label_index_value.type != TYPE_NUMBER) {
+        return error_throw(ERROR_RUNTIME, "Label index is not a number", 0);
+    }
+
+    long jump_ip = get_label_ip((long)label_index_value.as.number);
+    vm.ip = jump_ip;
 }
 
 static void run_label() {

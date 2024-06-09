@@ -1,18 +1,16 @@
+
 func main() {
-    var x = 4;
-    var y = 5;
 
-    if (x >= y) {
-        if (x == y) {
-            print "equal";
-        }
-
-        if (x > y) {
-            print "greater";
+    if (false) {
+        print "true";
+    } else {
+        if (true) {
+            print "false true";
+        } else {
+            print "false false";
+            return 0;
         }
     }
 
-    if (x < y) {
-        print "less";
-    }
+    print "finished";
 }
