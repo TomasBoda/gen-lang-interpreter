@@ -50,6 +50,8 @@ typedef enum {
 
     OP_PRINT,
     OP_NEWLINE,
+
+    OP_NUM_INSTRUCTIONS,
 } op_code_t;
 
 #endif

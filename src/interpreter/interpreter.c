@@ -82,7 +82,7 @@ void interpret() {
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
-    //return;
+    return;
 
     printf("BYTECODE --------------------\n");
 

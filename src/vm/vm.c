@@ -56,6 +56,63 @@ static void run_print_numeric_literal(value_t* value);
 static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
 
+static void run_not_implemented() {
+    error_throw(ERROR_RUNTIME, "Unrecognized instruction", 0);
+}
+
+typedef void (*instruction_handler)();
+
+instruction_handler instruction_handlers[OP_NUM_INSTRUCTIONS] = {
+    run_load_num_const,         // OP_LOAD_NUM_CONST
+    run_load_bool_const,        // OP_LOAD_BOOL_CONST
+    run_load_str_const,         // OP_LOAD_STR_CONST
+
+    run_load_var,               // OP_LOAD_VAR
+    run_store_var,              // OP_STORE_VAR
+
+    run_func_def,               // OP_FUNC_DEF
+    run_func_end,               // OP_FUNC_END
+    run_return,                 // OP_RETURN
+    run_call,                   // OP_CALL
+
+    run_not_implemented,        // OP_OBJ_DEF
+    run_not_implemented,        // OP_OBJ_END
+    run_not_implemented,        // OP_NEW_OBJ
+    run_not_implemented,        // OP_LOAD_PROP
+    run_not_implemented,        // OP_LOAD_PROP_CONST
+    run_not_implemented,        // OP_STORE_PROP
+
+    run_not_implemented,        // OP_ARRAY_DEF
+    run_not_implemented,        // OP_ARRAY_GET
+    run_not_implemented,        // OP_ARRAY_SET
+
+    run_not_implemented,        // OP_SIZE_OF
+
+    run_label,                  // OP_LABEL
+    run_not_implemented,        // OP_JUMP
+    run_jump_if_false,          // OP_JUMP_IF_FALSE
+
+    run_add,                    // OP_ADD
+    run_sub,                    // OP_SUB
+    run_mul,                    // OP_MUL
+    run_div,                    // OP_DIV
+    run_not_implemented,        // OP_DIV_FLOOR
+    run_not_implemented,        // OP_NEG
+
+    run_cmp_eq,                 // OP_CMP_EQ
+    run_cmp_ne,                 // OP_CMP_NE
+    run_cmp_lt,                 // OP_CMP_LT
+    run_cmp_le,                 // OP_CMP_LE
+    run_cmp_gt,                 // OP_CMP_GT
+    run_cmp_ge,                 // OP_CMP_GE
+
+    run_and,                    // OP_AND
+    run_or,                     // OP_OR
+
+    run_print,                  // OP_PRINT
+    run_not_implemented         // OP_NEWLINE
+};
+
 static byte_t current() {
     return vm.bytecode->instructions[vm.ip];
 }
@@ -132,160 +189,12 @@ static void vm_free() {
     }
 }
 
-const char* op_code_labels[] = {
-    "LOAD_NUM_CONST",
-    "LOAD_BOOL_CONST",
-    "LOAD_STR_CONST",
-
-    "LOAD_VAR",
-    "STORE_VAR",
-
-    "FUNC_DEF",
-    "FUNC_END",
-    "RETURN",
-    "CALL",
-
-    "OBJ_DEF",
-    "OBJ_END",
-    "NEW_OBJ",
-    "LOAD_PROP",
-    "LOAD_PROP_CONST",
-    "STORE_PROP",
-
-    "ARRAY_DEF",
-    "ARRAY_GET",
-    "ARRAY_SET",
-
-    "SIZE_OF",
-
-    "LABEL",
-    "JUMP",
-    "JUMP_IF_FALSE",
-
-    "ADD",
-    "SUB",
-    "MUL",
-    "DIV",
-    "DIV_FLOOR",
-    "NEG",
-
-    "CMP_EQ",
-    "CMP_NE",
-    "CMP_LT",
-    "CMP_LE",
-    "CMP_GT",
-    "CMP_GE",
-
-    "AND",
-    "OR",
-
-    "PRINT",
-    "NEWLINE",
-};
-
 void vm_run() {
     while (has_next()) {
-        switch (next()) {
-            case OP_LOAD_NUM_CONST: {
-                run_load_num_const();
-                break;
-            }
-            case OP_LOAD_BOOL_CONST: {
-                run_load_bool_const();
-                break;
-            }
-            case OP_LOAD_STR_CONST: {
-                run_load_str_const();
-                break;
-            }
-            case OP_LOAD_VAR: {
-                run_load_var();
-                break;
-            }
-            case OP_STORE_VAR: {
-                run_store_var();
-                break;
-            }
-            case OP_FUNC_DEF: {
-                run_func_def();
-                break;
-            }
-            case OP_FUNC_END: {
-                run_func_end();
-                break;
-            }
-            case OP_CALL: {
-                run_call();
-                break;
-            }
-            case OP_RETURN: {
-                run_return();
-                break;
-            }
-            case OP_JUMP_IF_FALSE: {
-                run_jump_if_false();
-                break;
-            }
-            case OP_LABEL: {
-                run_label();
-                break;
-            }
-            case OP_ADD: {
-                run_add();
-                break;
-            }
-            case OP_SUB: {
-                run_sub();
-                break;
-            }
-            case OP_MUL: {
-                run_mul();
-                break;
-            }
-            case OP_DIV: {
-                run_div();
-                break;
-            }
-            case OP_CMP_EQ: {
-                run_cmp_eq();
-                break;
-            }
-            case OP_CMP_NE: {
-                run_cmp_ne();
-                break;
-            }
-            case OP_CMP_GT: {
-                run_cmp_gt();
-                break;
-            }
-            case OP_CMP_GE: {
-                run_cmp_ge();
-                break;
-            }
-            case OP_CMP_LT: {
-                run_cmp_lt();
-                break;
-            }
-            case OP_CMP_LE: {
-                run_cmp_le();
-                break;
-            }
-            case OP_AND: {
-                run_and();
-                break;
-            }
-            case OP_OR: {
-                run_or();
-                break;
-            }
-            case OP_PRINT: {
-                run_print();
-                break;
-            }
-            default: {
-                error_throw(ERROR_RUNTIME, "Unrecognized instruction", 0);
-                break;
-            }
+        if (current() >= 0 && current() < OP_NUM_INSTRUCTIONS) {
+            instruction_handlers[next()]();
+        } else {
+            error_throw(ERROR_RUNTIME, "Instruction is unknown", 0);
         }
     }
 
@@ -300,8 +209,6 @@ static void run_load_num_const() {
     for (size_t i = 0; i < 8; i++) {
         bytes[i] = next();
     }
-
-    //vm.ip -= 1;
 
     double numeric_literal = bytes_to_double(bytes);
     stack_push(create_numeric_literal(numeric_literal));
