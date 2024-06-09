@@ -115,6 +115,7 @@ static double get_main_func_ip() {
 
 static void emit_main_func_call() {
     double main_func_ip = get_main_func_ip();
+    printf("main_function_ip = %.2f\n", main_func_ip);
     emit_numeric_literal_num(main_func_ip);
     emit_numeric_literal_num(0);
     emit(OP_CALL);

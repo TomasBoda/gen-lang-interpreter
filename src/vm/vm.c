@@ -56,61 +56,6 @@ static void run_not_implemented() {
     error_throw(ERROR_RUNTIME, "Unrecognized instruction", 0);
 }
 
-typedef void (*instruction_handler)();
-
-instruction_handler instruction_handlers[OP_NUM_INSTRUCTIONS] = {
-    run_load_num_const,         // OP_LOAD_NUM_CONST
-    run_load_bool_const,        // OP_LOAD_BOOL_CONST
-    run_load_str_const,         // OP_LOAD_STR_CONST
-
-    run_load_var,               // OP_LOAD_VAR
-    run_store_var,              // OP_STORE_VAR
-
-    run_func_def,               // OP_FUNC_DEF
-    run_func_end,               // OP_FUNC_END
-    run_return,                 // OP_RETURN
-    run_call,                   // OP_CALL
-
-    run_not_implemented,        // OP_OBJ_DEF
-    run_not_implemented,        // OP_OBJ_END
-    run_not_implemented,        // OP_NEW_OBJ
-    run_not_implemented,        // OP_LOAD_PROP
-    run_not_implemented,        // OP_LOAD_PROP_CONST
-    run_not_implemented,        // OP_STORE_PROP
-
-    run_not_implemented,        // OP_ARRAY_DEF
-    run_not_implemented,        // OP_ARRAY_GET
-    run_not_implemented,        // OP_ARRAY_SET
-
-    run_not_implemented,        // OP_SIZE_OF
-
-    run_label,                  // OP_LABEL
-    run_jump,                   // OP_JUMP
-    run_jump_if_false,          // OP_JUMP_IF_FALSE
-
-    run_add,                    // OP_ADD
-    run_sub,                    // OP_SUB
-    run_mul,                    // OP_MUL
-    run_div,                    // OP_DIV
-    run_not_implemented,        // OP_DIV_FLOOR
-    run_not_implemented,        // OP_NEG
-
-    run_cmp_eq,                 // OP_CMP_EQ
-    run_cmp_ne,                 // OP_CMP_NE
-    run_cmp_lt,                 // OP_CMP_LT
-    run_cmp_le,                 // OP_CMP_LE
-    run_cmp_gt,                 // OP_CMP_GT
-    run_cmp_ge,                 // OP_CMP_GE
-
-    run_and,                    // OP_AND
-    run_or,                     // OP_OR
-
-    run_print,                  // OP_PRINT
-    run_not_implemented,        // OP_NEWLINE
-
-    run_stack_clear,            // OP_STACK_CLEAR
-};
-
 static inline byte_t current() {
     return vm.bytecode->instructions[vm.ip];
 }
@@ -172,12 +117,172 @@ static void vm_free() {
 }
 
 void vm_run() {
+    static void* dispatch_table[] = {
+        &&label_load_num_const,         // OP_LOAD_NUM_CONST
+        &&label_load_bool_const,        // OP_LOAD_BOOL_CONST
+        &&label_load_str_const,         // OP_LOAD_STR_CONST
+
+        &&label_load_var,               // OP_LOAD_VAR
+        &&label_store_var,              // OP_STORE_VAR
+
+        &&label_func_def,               // OP_FUNC_DEF
+        &&label_func_end,               // OP_FUNC_END
+        &&label_return,                 // OP_RETURN
+        &&label_call,                   // OP_CALL
+
+        &&label_not_implemented,        // OP_OBJ_DEF
+        &&label_not_implemented,        // OP_OBJ_END
+        &&label_not_implemented,        // OP_NEW_OBJ
+        &&label_not_implemented,        // OP_LOAD_PROP
+        &&label_not_implemented,        // OP_LOAD_PROP_CONST
+        &&label_not_implemented,        // OP_STORE_PROP
+
+        &&label_not_implemented,        // OP_ARRAY_DEF
+        &&label_not_implemented,        // OP_ARRAY_GET
+        &&label_not_implemented,        // OP_ARRAY_SET
+
+        &&label_not_implemented,        // OP_SIZE_OF
+
+        &&label_label,                  // OP_LABEL
+        &&label_jump,                   // OP_JUMP
+        &&label_jump_if_false,          // OP_JUMP_IF_FALSE
+
+        &&label_add,                    // OP_ADD
+        &&label_sub,                    // OP_SUB
+        &&label_mul,                    // OP_MUL
+        &&label_div,                    // OP_DIV
+        &&label_not_implemented,        // OP_DIV_FLOOR
+        &&label_not_implemented,        // OP_NEG
+
+        &&label_cmp_eq,                 // OP_CMP_EQ
+        &&label_cmp_ne,                 // OP_CMP_NE
+        &&label_cmp_lt,                 // OP_CMP_LT
+        &&label_cmp_le,                 // OP_CMP_LE
+        &&label_cmp_gt,                 // OP_CMP_GT
+        &&label_cmp_ge,                 // OP_CMP_GE
+
+        &&label_and,                    // OP_AND
+        &&label_or,                     // OP_OR
+
+        &&label_print,                  // OP_PRINT
+        &&label_not_implemented,        // OP_NEWLINE
+
+        &&label_stack_clear,            // OP_STACK_CLEAR
+    };
+
+    #define DISPATCH() goto *dispatch_table[next()];
+
     while (has_next()) {
-        if (current() >= 0 && current() < OP_NUM_INSTRUCTIONS) {
-            instruction_handlers[next()]();
-        } else {
-            error_throw(ERROR_RUNTIME, "Instruction is unknown", 0);
-        }
+        DISPATCH();
+
+        label_load_num_const:
+            run_load_num_const();
+            DISPATCH();
+
+        label_load_bool_const:
+            run_load_bool_const();
+            DISPATCH();
+
+        label_load_str_const:
+            run_load_str_const();
+            DISPATCH();
+
+        label_load_var:
+            run_load_var();
+            DISPATCH();
+
+        label_store_var:
+            run_store_var();
+            DISPATCH();
+
+        label_func_def:
+            run_func_def();
+            DISPATCH();
+
+        label_func_end:
+            run_func_end();
+            DISPATCH();
+
+        label_return:
+            run_return();
+            if (!has_next()) break;
+            DISPATCH();
+
+        label_call:
+            run_call();
+            DISPATCH();
+
+        label_not_implemented:
+            run_not_implemented();
+            DISPATCH();
+
+        label_label:
+            run_label();
+            DISPATCH();
+
+        label_jump:
+            run_jump();
+            DISPATCH();
+
+        label_jump_if_false:
+            run_jump_if_false();
+            DISPATCH();
+
+        label_add:
+            run_add();
+            DISPATCH();
+
+        label_sub:
+            run_sub();
+            DISPATCH();
+
+        label_mul:
+            run_mul();
+            DISPATCH();
+
+        label_div:
+            run_div();
+            DISPATCH();
+
+        label_cmp_eq:
+            run_cmp_eq();
+            DISPATCH();
+
+        label_cmp_ne:
+            run_cmp_ne();
+            DISPATCH();
+
+        label_cmp_lt:
+            run_cmp_lt();
+            DISPATCH();
+
+        label_cmp_le:
+            run_cmp_le();
+            DISPATCH();
+
+        label_cmp_gt:
+            run_cmp_gt();
+            DISPATCH();
+
+        label_cmp_ge:
+            run_cmp_ge();
+            DISPATCH();
+
+        label_and:
+            run_and();
+            DISPATCH();
+
+        label_or:
+            run_or();
+            DISPATCH();
+
+        label_print:
+            run_print();
+            DISPATCH();
+
+        label_stack_clear:
+            run_stack_clear();
+            DISPATCH();
     }
 
     vm_free();
@@ -187,17 +292,12 @@ static void run_load_num_const() {
     if (DEBUG == true) printf("Running run_load_num_const\n");
 
     byte_t bytes[2];
-
     for (size_t i = 0; i < 2; i++) {
         bytes[i] = next();
     }
 
     uint16_t pool_index = bytes_to_uint16(bytes);
     value_t* value = pool_get(vm.pool, pool_index);
-
-    if (value->type != TYPE_NUMBER) {
-        return error_throw(ERROR_RUNTIME, "Value retrieved from pool is not a number", 0);
-    }
 
     stack_push(*value);
 }
@@ -220,10 +320,6 @@ static void run_load_str_const() {
 
     uint16_t pool_index = bytes_to_uint16(bytes);
     value_t* value = pool_get(vm.pool, pool_index);
-
-    if (value->type != TYPE_STRING) {
-        return error_throw(ERROR_RUNTIME, "Value retrieved from pool is not a string", 0);
-    }
 
     stack_push(*value);
 }
@@ -248,15 +344,7 @@ static value_t* load_var(char* identifier) {
         error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", 0);
     }
 
-    if (global_var != NULL) {
-        return global_var;
-    }
-
-    if (local_var != NULL) {
-        return local_var;
-    }
-
-    return NULL;
+    return global_var == NULL ? local_var : global_var;
 }
 
 static void run_load_var() {
@@ -265,10 +353,6 @@ static void run_load_var() {
     value_t identifier = stack_pop();
     value_t* value = load_var(identifier.as.string);
 
-    if (value == NULL) {
-        return error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", 0);
-    }
-
     stack_push(*value);
 }
 
@@ -276,11 +360,6 @@ static void run_store_var() {
     if (DEBUG == true) printf("Running run_store_var\n");
 
     value_t identifier = stack_pop();
-
-    if (identifier.type != TYPE_STRING) {
-        return error_throw(ERROR_RUNTIME, "in run_store_var(): value popped from stack is not a string (identifier)", 0);
-    }
-
     value_t value = stack_pop();
 
     if (call_stack_current(vm.call_stack) == NULL) {
@@ -290,38 +369,43 @@ static void run_store_var() {
     }
 }
 
+static inline void skip_func_def() {
+    while (vm.ip < vm.bytecode->count) {
+        switch (current()) {
+            case OP_LOAD_NUM_CONST: {
+                next();
+                vm.ip += 2;
+                break;
+            }
+            case OP_LOAD_BOOL_CONST: {
+                next();
+                vm.ip += 1;
+                break;
+            }
+            case OP_LOAD_STR_CONST: {
+                next();
+                vm.ip += 2;
+                break;
+            }
+            case OP_FUNC_END: {
+                next();
+                return;
+            }
+            default: {
+                vm.ip += 1;
+                break;
+            }
+        }
+    }
+}
+
 static void run_func_def() {
     if (DEBUG == true) printf("Running run_func_def\n");
 
     value_t func_identifier = stack_pop();
     table_set(vm.table, func_identifier.as.string, value_create_number(vm.ip));
 
-    while (vm.ip < vm.bytecode->count) {
-        if (current() == OP_LOAD_NUM_CONST) {
-            next();
-            vm.ip += 2;
-            continue;
-        }
-
-        if (current() == OP_LOAD_BOOL_CONST) {
-            next();
-            vm.ip += 1;
-            continue;
-        }
-
-        if (current() == OP_LOAD_STR_CONST) {
-            next();
-            vm.ip += 2;
-            continue;
-        }
-
-        if (current() == OP_FUNC_END) {
-            next();
-            break;
-        }
-
-        vm.ip += 1;
-    }
+    skip_func_def();
 }
 
 static void run_func_end() {
@@ -446,11 +530,6 @@ static void run_jump() {
     if (DEBUG == true) printf("Running run_jump\n");
 
     value_t label_index_value = stack_pop();
-
-    if (label_index_value.type != TYPE_NUMBER) {
-        return error_throw(ERROR_RUNTIME, "Label index is not a number", 0);
-    }
-
     long jump_ip = get_label_ip((long)label_index_value.as.number);
     vm.ip = jump_ip;
 }
@@ -781,10 +860,6 @@ static void run_stack_clear() {
     if (DEBUG == true) printf("Running run_stack_clear\n");
 
     value_t stack_item_count = stack_pop();
-
-    if (stack_item_count.type != TYPE_NUMBER) {
-        return error_throw(ERROR_RUNTIME, "stack_item_count.type is not a number", 0);
-    }
 
     for (int i = 0; i < (int)stack_item_count.as.number; i++) {
         stack_pop();
