@@ -1,6 +1,10 @@
 #ifndef gen_lang_token_h
 #define gen_lang_token_h
 
+/**
+ * @brief Token types
+ * 
+ */
 typedef enum {
     TOKEN_VAR, TOKEN_FUNC, TOKEN_OBJECT,
 
@@ -36,6 +40,10 @@ typedef enum {
     TOKEN_EOF,
 } token_type;
 
+/**
+ * @brief Object representing a token, its type, value and line in the source code
+ * 
+ */
 typedef struct {
     token_type type;
     const char* start;

@@ -1,6 +1,10 @@
 #ifndef gen_lang_instruction_h
 #define gen_lang_instruction_h
 
+/**
+ * @brief Instruction types
+ * 
+ */
 typedef enum {
     OP_LOAD_CONST,
 

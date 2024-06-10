@@ -9,6 +9,10 @@
 #include "utils/table.h"
 #include "pool.h"
 
+/**
+ * @brief Object representing a virtual machine
+ * 
+ */
 typedef struct {
     long ip;
     value_t stack[256];
@@ -19,7 +23,17 @@ typedef struct {
     pool_t* pool;
 } virtual_machine_t;
 
+/**
+ * @brief Initializes the virtual machine object
+ * 
+ * @param compiled_bytecode bytecode object to run using the virtual machine
+ */
 void vm_init(bytecode_t* compiled_bytecode);
+
+/**
+ * @brief Starts the virtual machine and interprets the bytecode
+ * 
+ */
 void vm_run();
 
 #endif
