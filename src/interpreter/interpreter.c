@@ -101,7 +101,7 @@ static void print_bytecode(bytecode_t* bytecode) {
         int op_index = i;
 
         switch (bytecode->instructions[i]) {
-            case OP_LOAD_NUM_CONST: {
+            case OP_LOAD_CONST: {
                 printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
 
                 byte_t bytes[2];
@@ -113,28 +113,6 @@ static void print_bytecode(bytecode_t* bytecode) {
                 printf("%d: %d\n", op_index + 2, bytes[1]);
 
                 i += 1;
-                break;
-            }
-            case OP_LOAD_STR_CONST: {
-                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
-
-                byte_t bytes[2];
-                for (int j = i; j < i + 2; j++) {
-                    bytes[j - i] = bytecode->instructions[j];
-                }
-
-                printf("%d: %d\n", op_index + 1, bytes[0]);
-                printf("%d: %d\n", op_index + 2, bytes[1]);
-
-                i += 1;
-                break;
-            }
-            case OP_LOAD_BOOL_CONST: {
-                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
-
-                byte_t bool_value = bytecode->instructions[i];
-                printf("%d: %s\n", op_index + 1, bool_value == 1 ? "true" : "false");
-
                 break;
             }
             default: {

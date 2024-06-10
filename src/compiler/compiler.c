@@ -21,7 +21,7 @@ static void emit(byte_t instruction) {
 }
 
 static void emit_numeric_literal(char* raw_value) {
-    emit(OP_LOAD_NUM_CONST);
+    emit(OP_LOAD_CONST);
 
     value_t value;
     value.type = TYPE_NUMBER;
@@ -36,7 +36,7 @@ static void emit_numeric_literal(char* raw_value) {
 }
 
 static void emit_numeric_literal_num(double numeric_value) {
-    emit(OP_LOAD_NUM_CONST);
+    emit(OP_LOAD_CONST);
 
     value_t value;
     value.type = TYPE_NUMBER;
@@ -51,14 +51,22 @@ static void emit_numeric_literal_num(double numeric_value) {
 }
 
 static void emit_boolean_literal(char* raw_value) {
-    emit(OP_LOAD_BOOL_CONST);
+    emit(OP_LOAD_CONST);
 
-    bool value = strcmp(raw_value, "true") == 0;
-    emit(value ? 1 : 0);
+    value_t value;
+    value.type = TYPE_BOOLEAN;
+    value.as.boolean = strcmp(raw_value, "true") == 0;
+
+    uint16_t value_index = pool_add(compiler.pool, value);
+    
+    byte_t* bytes = uint16_to_bytes(value_index);
+    for (int i = 0; i < 2; i++) {
+        emit(bytes[i]);
+    }
 }
 
 static void emit_string_literal(char* raw_value) {
-    emit(OP_LOAD_STR_CONST);
+    emit(OP_LOAD_CONST);
 
     value_t value;
     value.type = TYPE_STRING;
@@ -74,17 +82,7 @@ static void emit_string_literal(char* raw_value) {
 
 static double get_main_func_ip() {
     for (int i = 0; i < compiler.bytecode->count; i++) {
-        if (compiler.bytecode->instructions[i] == OP_LOAD_NUM_CONST) {
-            i += 2;
-            continue;
-        }
-
-        if (compiler.bytecode->instructions[i] == OP_LOAD_BOOL_CONST) {
-            i += 1;
-            continue;
-        }
-
-        if (compiler.bytecode->instructions[i] == OP_LOAD_STR_CONST) {
+        if (compiler.bytecode->instructions[i] == OP_LOAD_CONST) {
             i++;
 
             byte_t bytes[2];
@@ -97,9 +95,15 @@ static double get_main_func_ip() {
             uint16_t index = bytes_to_uint16(bytes);
             value_t* value = pool_get(compiler.pool, index);
 
+            if (value == NULL) {
+                continue;
+            }
+
             if (value->type == TYPE_STRING && strcmp(value->as.string, "main") == 0 && compiler.bytecode->instructions[i] == OP_FUNC_DEF) {
                 return (double)(i + 1);
             }
+
+            i -= 1;
         }
     }
 
@@ -109,6 +113,7 @@ static double get_main_func_ip() {
 
 static void emit_main_func_call() {
     double main_func_ip = get_main_func_ip();
+    printf("HERE\n");
     emit_numeric_literal_num(main_func_ip);
     emit_numeric_literal_num(0);
     emit(OP_CALL);

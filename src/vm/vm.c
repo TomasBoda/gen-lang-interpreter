@@ -15,9 +15,7 @@ static bool DEBUG = false;
 
 virtual_machine_t vm;
 
-static void run_load_num_const();
-static void run_load_bool_const();
-static void run_load_str_const();
+static void run_load_const();
 
 static void run_load_var();
 static void run_store_var();
@@ -118,9 +116,7 @@ static void vm_free() {
 
 void vm_run() {
     static void* dispatch_table[] = {
-        &&label_load_num_const,         // OP_LOAD_NUM_CONST
-        &&label_load_bool_const,        // OP_LOAD_BOOL_CONST
-        &&label_load_str_const,         // OP_LOAD_STR_CONST
+        &&label_load_const,             // OP_LOAD_CONST
 
         &&label_load_var,               // OP_LOAD_VAR
         &&label_store_var,              // OP_STORE_VAR
@@ -175,16 +171,8 @@ void vm_run() {
     while (has_next()) {
         DISPATCH();
 
-        label_load_num_const:
-            run_load_num_const();
-            DISPATCH();
-
-        label_load_bool_const:
-            run_load_bool_const();
-            DISPATCH();
-
-        label_load_str_const:
-            run_load_str_const();
+        label_load_const:
+            run_load_const();
             DISPATCH();
 
         label_load_var:
@@ -288,28 +276,8 @@ void vm_run() {
     vm_free();
 }
 
-static void run_load_num_const() {
+static void run_load_const() {
     if (DEBUG == true) printf("Running run_load_num_const\n");
-
-    byte_t bytes[2];
-    bytes[0] = next();
-    bytes[1] = next();
-
-    uint16_t pool_index = bytes_to_uint16(bytes);
-    value_t* value = pool_get(vm.pool, pool_index);
-
-    stack_push(*value);
-}
-
-static void run_load_bool_const() {
-    if (DEBUG == true) printf("Running run_load_bool_const\n");
-
-    byte_t boolean_literal = next();
-    stack_push(value_create_boolean(boolean_literal == 1));
-}
-
-static void run_load_str_const() {
-    if (DEBUG == true) printf("Running run_load_str_const\n");
 
     byte_t bytes[2];
     bytes[0] = next();
@@ -369,17 +337,7 @@ static void run_store_var() {
 static inline void skip_func_def() {
     while (vm.ip < vm.bytecode->count) {
         switch (current()) {
-            case OP_LOAD_NUM_CONST: {
-                next();
-                vm.ip += 2;
-                break;
-            }
-            case OP_LOAD_BOOL_CONST: {
-                next();
-                vm.ip += 1;
-                break;
-            }
-            case OP_LOAD_STR_CONST: {
+            case OP_LOAD_CONST: {
                 next();
                 vm.ip += 2;
                 break;
