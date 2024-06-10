@@ -39,7 +39,7 @@ static char* read_file(const char* path) {
 
 int main(int argc, const char* argv[]) {
     if (argc != 2) {
-        fprintf(stderr, "Usage: clox [path]\n");
+        fprintf(stderr, "Usage: GEN [path]\n");
         exit(64);
     }
 
