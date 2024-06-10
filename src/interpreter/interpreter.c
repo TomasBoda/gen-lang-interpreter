@@ -143,10 +143,10 @@ static void print_bytecode(bytecode_t* bytecode) {
 
     int last_line = -1;
 
-    for (int i = 0; i < bytecode->count; ++i) {
+    for (int i = 0; i < bytecode->count - 7; ++i) {
         int op_index = i;
 
-        if (i < bytecode->count - 7 && bytecode->lines[i] != last_line) {
+        if (bytecode->lines[i] != last_line) {
             printf("------------------------------\n");
             printf("%s\n", get_line(loaded_source_code, bytecode->lines[i] - 1));
             printf("------------------------------\n");
