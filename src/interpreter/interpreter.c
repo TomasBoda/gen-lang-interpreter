@@ -14,9 +14,7 @@
 #include "utils/common.h"
 
 const char* OP_CODE_LABELS[] = {
-    "LOAD_NUM_CONST",
-    "LOAD_BOOL_CONST",
-    "LOAD_STR_CONST",
+    "LOAD_CONST",
 
     "LOAD_VAR",
     "STORE_VAR",
@@ -39,7 +37,6 @@ const char* OP_CODE_LABELS[] = {
 
     "SIZE_OF",
 
-    "LABEL",
     "JUMP",
     "JUMP_IF_FALSE",
 

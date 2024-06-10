@@ -25,7 +25,6 @@ typedef enum {
 
     OP_SIZE_OF,
 
-    OP_LABEL,
     OP_JUMP,
     OP_JUMP_IF_FALSE,
 

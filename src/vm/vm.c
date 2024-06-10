@@ -11,8 +11,6 @@
 #include "vm/vm.h"
 #include "vm/pool.h"
 
-static bool DEBUG = false;
-
 virtual_machine_t vm;
 
 static void run_load_const();
@@ -27,7 +25,6 @@ static void run_return();
 
 static void run_jump_if_false();
 static void run_jump();
-static void run_label();
 
 static void run_add();
 static void run_sub();
@@ -139,7 +136,6 @@ void vm_run() {
 
         &&label_not_implemented,        // OP_SIZE_OF
 
-        &&label_label,                  // OP_LABEL
         &&label_jump,                   // OP_JUMP
         &&label_jump_if_false,          // OP_JUMP_IF_FALSE
 
@@ -202,10 +198,6 @@ void vm_run() {
 
         label_not_implemented:
             run_not_implemented();
-            DISPATCH();
-
-        label_label:
-            run_label();
             DISPATCH();
 
         label_jump:
@@ -277,8 +269,6 @@ void vm_run() {
 }
 
 static void run_load_const() {
-    if (DEBUG == true) printf("Running run_load_num_const\n");
-
     byte_t bytes[2];
     bytes[0] = next();
     bytes[1] = next();
@@ -313,8 +303,6 @@ static value_t* load_var(char* identifier) {
 }
 
 static void run_load_var() {
-    if (DEBUG == true) printf("Running run_load_var\n");
-
     value_t identifier = stack_pop();
     value_t* value = load_var(identifier.as.string);
 
@@ -322,8 +310,6 @@ static void run_load_var() {
 }
 
 static void run_store_var() {
-    if (DEBUG == true) printf("Running run_store_var\n");
-
     value_t identifier = stack_pop();
     value_t value = stack_pop();
 
@@ -355,21 +341,15 @@ static inline void skip_func_def() {
 }
 
 static void run_func_def() {
-    if (DEBUG == true) printf("Running run_func_def\n");
-
     value_t func_identifier = stack_pop();
     table_set(vm.table, func_identifier.as.string, value_create_number(vm.ip));
 
     skip_func_def();
 }
 
-static void run_func_end() {
-    if (DEBUG == true) printf("Running run_func_end\n");
-}
+static void run_func_end() {}
 
 static void run_call() {
-    if (DEBUG == true) printf("Running run_call\n");
-
     value_t func_arg_count = stack_pop();
     byte_t arg_count = func_arg_count.as.number;
 
@@ -388,8 +368,6 @@ static void run_call() {
 }
 
 static void run_return() {
-    if (DEBUG == true) printf("Running run_return\n");
-    
     value_t return_value = stack_pop();
     call_frame_t call_frame = call_stack_pop(vm.call_stack);
 
@@ -405,18 +383,8 @@ static void run_return() {
 }
 
 static void run_jump_if_false() {
-    if (DEBUG == true) printf("Running run_jump_if_false\n");
-
     value_t label_index_value = stack_pop();
     value_t boolean_value = stack_pop();
-
-    if (label_index_value.type != TYPE_NUMBER) {
-        return error_throw(ERROR_RUNTIME, "Label index is not a number", 0);
-    }
-
-    if (boolean_value.type != TYPE_BOOLEAN) {
-        return error_throw(ERROR_RUNTIME, "Jump if false operand is not a boolean", 0);
-    }
 
     if (boolean_value.as.boolean == false) {
         long jump_ip = (long)label_index_value.as.number;
@@ -425,21 +393,12 @@ static void run_jump_if_false() {
 }
 
 static void run_jump() {
-    if (DEBUG == true) printf("Running run_jump\n");
-
     value_t label_index_value = stack_pop();
     long jump_ip = (long)label_index_value.as.number;
     vm.ip = jump_ip;
 }
 
-static void run_label() {
-    if (DEBUG == true) printf("Running run_label\n");
-    vm.ip += 3;
-}
-
 static void run_add() {
-    if (DEBUG == true) printf("Running run_add\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -477,32 +436,24 @@ static void run_add() {
 }
 
 static void run_sub() {
-    if (DEBUG == true) printf("Running run_sub\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
     stack_push(value_create_number(value2.as.number - value1.as.number));
 }
 
 static void run_mul() {
-    if (DEBUG == true) printf("Running run_mul\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
     stack_push(value_create_number(value2.as.number * value1.as.number));
 }
 
 static void run_div() {
-    if (DEBUG == true) printf("Running run_div\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
     stack_push(value_create_number(value2.as.number / value1.as.number));
 }
 
 static void run_cmp_eq() {
-    if (DEBUG == true) printf("Running run_cmp_eq\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -540,8 +491,6 @@ static void run_cmp_eq() {
 }
 
 static void run_cmp_ne() {
-    if (DEBUG == true) printf("Running run_cmp_ne\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -579,8 +528,6 @@ static void run_cmp_ne() {
 }
 
 static void run_cmp_gt() {
-    if (DEBUG == true) printf("Running run_cmp_gt\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -601,8 +548,6 @@ static void run_cmp_gt() {
 }
 
 static void run_cmp_ge() {
-    if (DEBUG == true) printf("Running run_cmp_ge\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -623,8 +568,6 @@ static void run_cmp_ge() {
 }
 
 static void run_cmp_lt() {
-    if (DEBUG == true) printf("Running run_cmp_lt\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -645,8 +588,6 @@ static void run_cmp_lt() {
 }
 
 static void run_cmp_le() {
-    if (DEBUG == true) printf("Running run_cmp_le\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -667,8 +608,6 @@ static void run_cmp_le() {
 }
 
 static void run_and() {
-    if (DEBUG == true) printf("Running run_and\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -689,8 +628,6 @@ static void run_and() {
 }
 
 static void run_or() {
-    if (DEBUG == true) printf("Running run_or\n");
-
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -710,9 +647,23 @@ static void run_or() {
     }
 }
 
-static void run_print() {
-    if (DEBUG == true) printf("Running run_print\n");
+static inline void run_print_numeric_literal(value_t* value) {
+    if (value->as.number == (int)value->as.number) {
+        printf("%d\n", (int)value->as.number);
+    } else {
+        printf("%.2f\n", value->as.number);
+    }
+}
 
+static inline void run_print_boolean_literal(value_t* value) {
+    printf("%s\n", value->as.boolean ? "true" : "false");
+}
+
+static inline void run_print_string_literal(value_t* value) {
+    printf("%s\n", value->as.string);
+}
+
+static void run_print() {
     value_t value = stack_pop();
 
     switch (value.type) {
@@ -731,31 +682,7 @@ static void run_print() {
     }
 }
 
-static void run_print_numeric_literal(value_t* value) {
-    if (DEBUG == true) printf("Running run_print_numeric_literal\n");
-
-    if (value->as.number == (int)value->as.number) {
-        printf("%d\n", (int)value->as.number);
-    } else {
-        printf("%.2f\n", value->as.number);
-    }
-}
-
-static void run_print_boolean_literal(value_t* value) {
-    if (DEBUG == true) printf("Running run_print_boolean_literal\n");
-
-    printf("%s\n", value->as.boolean ? "true" : "false");
-}
-
-static void run_print_string_literal(value_t* value) {
-    if (DEBUG == true) printf("Running run_print_string_literal\n");
-
-    printf("%s\n", value->as.string);
-}
-
 static void run_stack_clear() {
-    if (DEBUG == true) printf("Running run_stack_clear\n");
-
     value_t stack_item_count = stack_pop();
 
     for (int i = 0; i < (int)stack_item_count.as.number; i++) {
