@@ -16,12 +16,12 @@ static bool DEBUG = false;
 
 compiler_t compiler;
 
-static void emit(byte_t instruction) {
-    bytecode_add(compiler.bytecode, instruction);
+static void emit(byte_t instruction, int line) {
+    bytecode_add(compiler.bytecode, instruction, line);
 }
 
-static void emit_numeric_literal(char* raw_value) {
-    emit(OP_LOAD_CONST);
+static void emit_numeric_literal(char* raw_value, int line) {
+    emit(OP_LOAD_CONST, line);
 
     value_t value;
     value.type = TYPE_NUMBER;
@@ -31,12 +31,12 @@ static void emit_numeric_literal(char* raw_value) {
     
     byte_t* bytes = uint16_to_bytes(value_index);
     for (int i = 0; i < 2; i++) {
-        emit(bytes[i]);
+        emit(bytes[i], line);
     }
 }
 
-static void emit_numeric_literal_num(double numeric_value) {
-    emit(OP_LOAD_CONST);
+static void emit_numeric_literal_num(double numeric_value, int line) {
+    emit(OP_LOAD_CONST, line);
 
     value_t value;
     value.type = TYPE_NUMBER;
@@ -46,12 +46,12 @@ static void emit_numeric_literal_num(double numeric_value) {
     
     byte_t* bytes = uint16_to_bytes(value_index);
     for (int i = 0; i < 2; i++) {
-        emit(bytes[i]);
+        emit(bytes[i], line);
     }
 }
 
-static void emit_boolean_literal(char* raw_value) {
-    emit(OP_LOAD_CONST);
+static void emit_boolean_literal(char* raw_value, int line) {
+    emit(OP_LOAD_CONST, line);
 
     value_t value;
     value.type = TYPE_BOOLEAN;
@@ -61,12 +61,12 @@ static void emit_boolean_literal(char* raw_value) {
     
     byte_t* bytes = uint16_to_bytes(value_index);
     for (int i = 0; i < 2; i++) {
-        emit(bytes[i]);
+        emit(bytes[i], line);
     }
 }
 
-static void emit_string_literal(char* raw_value) {
-    emit(OP_LOAD_CONST);
+static void emit_string_literal(char* raw_value, int line) {
+    emit(OP_LOAD_CONST, line);
 
     value_t value;
     value.type = TYPE_STRING;
@@ -76,7 +76,7 @@ static void emit_string_literal(char* raw_value) {
     
     byte_t* bytes = uint16_to_bytes(value_index);
     for (int i = 0; i < 2; i++) {
-        emit(bytes[i]);
+        emit(bytes[i], line);
     }
 }
 
@@ -113,9 +113,9 @@ static double get_main_func_ip() {
 
 static void emit_main_func_call() {
     double main_func_ip = get_main_func_ip();
-    emit_numeric_literal_num(main_func_ip);
-    emit_numeric_literal_num(0);
-    emit(OP_CALL);
+    emit_numeric_literal_num(main_func_ip, 0);
+    emit_numeric_literal_num(0, 0);
+    emit(OP_CALL, 0);
 }
 
 static void compile_var_declaration();
@@ -201,25 +201,25 @@ pool_t* compiler_get_pool() {
 static void compile_var_declaration() {
     if (DEBUG == true) printf("Compiling compile_var_declaration\n");
 
-    assert(TOKEN_VAR);
+    int line = assert(TOKEN_VAR).line;
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
     assert(TOKEN_ASSIGNMENT);
 
     compile_expression();
     assert(TOKEN_SEMICOLON);
 
-    emit_string_literal(substring(identifier_token.start, identifier_token.length));
-    emit(OP_STORE_VAR);
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+    emit(OP_STORE_VAR, line);
 }
 
 static void compile_func_declaration() {
     if (DEBUG == true) printf("Compiling compile_func_declaration\n");
 
-    assert(TOKEN_FUNC);
+    int line = assert(TOKEN_FUNC).line;
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
 
-    emit_string_literal(substring(identifier_token.start, identifier_token.length));
-    emit(OP_FUNC_DEF);
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+    emit(OP_FUNC_DEF, line);
 
     assert(TOKEN_OPEN_PAREN);
     compile_func_declaration_param_list();
@@ -227,24 +227,24 @@ static void compile_func_declaration() {
 
     assert(TOKEN_OPEN_BRACE);
     compile_func_declaration_body();
-    assert(TOKEN_CLOSE_BRACE);
+    line = assert(TOKEN_CLOSE_BRACE).line;
 
     // explicitely emit 0 return
-    emit_numeric_literal_num(0);
-    emit(OP_RETURN);
+    emit_numeric_literal_num(0, line);
+    emit(OP_RETURN, line);
 
-    emit(OP_FUNC_END);
+    emit(OP_FUNC_END, line);
 }
 
 static void compile_func_declaration_param_list() {
     if (DEBUG == true) printf("Compiling compile_func_declaration_param_list\n");
 
     while (peek().type != TOKEN_CLOSE_PAREN) {
-        assert(TOKEN_VAR);
+        int line = assert(TOKEN_VAR).line;
         token_t identifier_token = assert(TOKEN_IDENTIFIER);
 
-        emit_string_literal(substring(identifier_token.start, identifier_token.length));
-        emit(OP_STORE_VAR);
+        emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+        emit(OP_STORE_VAR, line);
 
         if (peek().type == TOKEN_COMMA) {
             advance();
@@ -282,7 +282,7 @@ static void compile_func_declaration_body() {
                 break;
             }
             default: {
-                error_throw(ERROR_COMPILER, "Unknown statement in function body", 0);
+                error_throw(ERROR_COMPILER, "Unknown statement in function body", peek().line);
                 break;
             }
         }
@@ -305,14 +305,14 @@ static void update_jump_values(int ip1, int ip2) {
 static void compile_conditional_statement() {
     if (DEBUG == true) printf("Compiling compile_conditional_statement\n");
 
-    assert(TOKEN_IF);
+    int line = assert(TOKEN_IF).line;
     assert(TOKEN_OPEN_PAREN);
     compile_expression();
 
     int ip1 = compiler.bytecode->count;
     // dummy value 0
-    emit_numeric_literal_num(0);
-    emit(OP_JUMP_IF_FALSE);
+    emit_numeric_literal_num(0, line);
+    emit(OP_JUMP_IF_FALSE, line);
 
     assert(TOKEN_CLOSE_PAREN);
     assert(TOKEN_OPEN_BRACE);
@@ -321,7 +321,7 @@ static void compile_conditional_statement() {
         compile_func_declaration_body();
     }
 
-    assert(TOKEN_CLOSE_BRACE);
+    line = assert(TOKEN_CLOSE_BRACE).line;
 
     if (peek().type != TOKEN_ELSE) {
         int ip2 = compiler.bytecode->count;
@@ -331,8 +331,8 @@ static void compile_conditional_statement() {
 
     int ip3 = compiler.bytecode->count;
     // dummy value 0
-    emit_numeric_literal_num(0);
-    emit(OP_JUMP);
+    emit_numeric_literal_num(0, line);
+    emit(OP_JUMP, line);
 
     int ip4 = compiler.bytecode->count;
     update_jump_values(ip1, ip4);
@@ -353,7 +353,7 @@ static void compile_conditional_statement() {
 static void compile_while_statement() {
     if (DEBUG == true) printf("Compiling compile_while_statement\n");
 
-    assert(TOKEN_WHILE);
+    int line = assert(TOKEN_WHILE).line;
     assert(TOKEN_OPEN_PAREN);
 
     int ip1 = compiler.bytecode->count;
@@ -363,8 +363,8 @@ static void compile_while_statement() {
     int ip2 = compiler.bytecode->count;
 
     // dummy value 0
-    emit_numeric_literal_num(0);
-    emit(OP_JUMP_IF_FALSE);
+    emit_numeric_literal_num(0, line);
+    emit(OP_JUMP_IF_FALSE, line);
 
     assert(TOKEN_CLOSE_PAREN);
     assert(TOKEN_OPEN_BRACE);
@@ -373,10 +373,10 @@ static void compile_while_statement() {
         compile_func_declaration_body();
     }
 
-    assert(TOKEN_CLOSE_BRACE);
+    line = assert(TOKEN_CLOSE_BRACE).line;
 
-    emit_numeric_literal_num((double)ip1);
-    emit(OP_JUMP);
+    emit_numeric_literal_num((double)ip1, line);
+    emit(OP_JUMP, line);
 
     int ip3 = compiler.bytecode->count;
     update_jump_values(ip2, ip3);
@@ -386,36 +386,36 @@ static void compile_call_statement() {
     if (DEBUG == true) printf("Compiling compile_call_statement\n");
 
     compile_call_expression();
-    assert(TOKEN_SEMICOLON);
+    int line = assert(TOKEN_SEMICOLON).line;
 
-    emit_numeric_literal_num(1);
-    emit(OP_STACK_CLEAR);
+    emit_numeric_literal_num(1, line);
+    emit(OP_STACK_CLEAR, line);
 }
 
 static void compile_return() {
     if (DEBUG == true) printf("Compiling compile_return\n");
 
-    assert(TOKEN_RETURN);
+    int line = assert(TOKEN_RETURN).line;
 
     if (peek().type == TOKEN_SEMICOLON) {
-        emit_numeric_literal_num(0);
+        emit_numeric_literal_num(0, line);
     } else {
         compile_expression();
     }
 
     assert(TOKEN_SEMICOLON);
-    emit(OP_RETURN);
+    emit(OP_RETURN, line);
 }
 
 static void compile_print() {
     if (DEBUG == true) printf("Compiling compile_print\n");
 
-    assert(TOKEN_PRINT);
+    int line = assert(TOKEN_PRINT).line;
 
     compile_expression();
     assert(TOKEN_SEMICOLON);
 
-    emit(OP_PRINT);
+    emit(OP_PRINT, line);
 }
 
 static void compile_expression() {
@@ -442,9 +442,9 @@ static void compile_logical_operator(token_t operator_token) {
 
     switch (operator_token.type) {
         case TOKEN_AND:
-            return emit(OP_AND);
+            return emit(OP_AND, operator_token.line);
         case TOKEN_OR:
-            return emit(OP_OR);
+            return emit(OP_OR, operator_token.line);
         default:
             return error_throw(ERROR_COMPILER, "Unknown logical operator", operator_token.line);
     }
@@ -468,17 +468,17 @@ static void compile_relational_operator(token_t operator_token) {
 
     switch (operator_token.type) {
         case TOKEN_EQ:
-            return emit(OP_CMP_EQ);
+            return emit(OP_CMP_EQ, operator_token.line);
         case TOKEN_NE:
-            return emit(OP_CMP_NE);
+            return emit(OP_CMP_NE, operator_token.line);
         case TOKEN_GT:
-            return emit(OP_CMP_GT);
+            return emit(OP_CMP_GT, operator_token.line);
         case TOKEN_GE:
-            return emit(OP_CMP_GE);
+            return emit(OP_CMP_GE, operator_token.line);
         case TOKEN_LT:
-            return emit(OP_CMP_LT);
+            return emit(OP_CMP_LT, operator_token.line);
         case TOKEN_LE:
-            return emit(OP_CMP_LE);
+            return emit(OP_CMP_LE, operator_token.line);
         default:
             return error_throw(ERROR_COMPILER, "Unknown relational operator", operator_token.line);
     }
@@ -515,13 +515,13 @@ static void compile_binary_operator(token_t operator_token) {
 
     switch (operator_token.type) {
         case TOKEN_PLUS:
-            return emit(OP_ADD);
+            return emit(OP_ADD, operator_token.line);
         case TOKEN_MINUS:
-            return emit(OP_SUB);
+            return emit(OP_SUB, operator_token.line);
         case TOKEN_STAR:
-            return emit(OP_MUL);
+            return emit(OP_MUL, operator_token.line);
         case TOKEN_SLASH:
-            return emit(OP_DIV);
+            return emit(OP_DIV, operator_token.line);
         default:
             return error_throw(ERROR_COMPILER, "Unknown binary operator", operator_token.line);
     }
@@ -533,12 +533,12 @@ static void compile_call_expression() {
     compile_primary_expression();
 
     if (peek().type == TOKEN_OPEN_PAREN) {
-        advance();
+        int line = advance().line;
         double arg_count = compile_call_expression_args();
         assert(TOKEN_CLOSE_PAREN);
 
-        emit_numeric_literal_num(arg_count);
-        emit(OP_CALL);
+        emit_numeric_literal_num(arg_count, line);
+        emit(OP_CALL, line);
     }
 }
 
@@ -591,27 +591,27 @@ static void compile_identifier() {
 
     token_t token = assert(TOKEN_IDENTIFIER);
 
-    emit_string_literal(substring(token.start, token.length));
-    emit(OP_LOAD_VAR);
+    emit_string_literal(substring(token.start, token.length), token.line);
+    emit(OP_LOAD_VAR, token.line);
 }
 
 static void compile_numeric_literal() {
     if (DEBUG == true) printf("Compiling compile_numeric_literal\n");
 
     token_t token = advance();
-    emit_numeric_literal(substring(token.start, token.length));
+    emit_numeric_literal(substring(token.start, token.length), token.line);
 }
 
 static void compile_boolean_literal() {
     if (DEBUG == true) printf("Compiling compile_boolean_literal\n");
 
     token_t token = advance();
-    emit_boolean_literal(substring(token.start, token.length));
+    emit_boolean_literal(substring(token.start, token.length), token.line);
 }
 
 static void compile_string_literal() {
     if (DEBUG == true) printf("Compiling compile_string_literal\n");
 
     token_t token = advance();
-    emit_string_literal(substring(token.start, token.length));
+    emit_string_literal(substring(token.start, token.length), token.line);
 }

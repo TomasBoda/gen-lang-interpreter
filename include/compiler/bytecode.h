@@ -12,9 +12,10 @@ typedef struct {
     int count;
     int capacity;
     byte_t* instructions;
+    int* lines;
 } bytecode_t;
 
 bytecode_t* bytecode_init();
-void bytecode_add(bytecode_t* bytecode, byte_t instruction);
+void bytecode_add(bytecode_t* bytecode, byte_t instruction, int line);
 
 #endif

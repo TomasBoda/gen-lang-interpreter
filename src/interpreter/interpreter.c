@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "lexer/lexer.h"
 #include "compiler/compiler.h"
@@ -65,9 +66,55 @@ const char* OP_CODE_LABELS[] = {
 
 static void print_bytecode(bytecode_t* bytecode);
 
+static const char* loaded_source_code;
+
+char* get_line(const char* str, int i) {
+    const char* start = str;
+    const char* end = str;
+    int line_num = 0;
+
+    while (*end != '\0') {
+        if (*end == '\n' || *(end + 1) == '\0') {
+            if (line_num == i) {
+                if (*(end + 1) == '\0' && *end != '\n') {
+                    end++;
+                }
+
+                while (isspace((unsigned char)*start) && start < end) {
+                    start++;
+                }
+
+                const char* line_end = end;
+                while (line_end > start && isspace((unsigned char)*(line_end - 1))) {
+                    line_end--;
+                }
+
+                size_t line_length = (size_t)(line_end - start);
+
+                char* line = (char*)malloc(line_length + 1);
+                if (!line) {
+                    fprintf(stderr, "Memory allocation failed\n");
+                    return NULL;
+                }
+
+                strncpy(line, start, line_length);
+                line[line_length] = '\0';
+
+                return line;
+            }
+            line_num++;
+            start = end + 1;
+        }
+        end++;
+    }
+    return NULL;
+}
+
 void interpreter_init(const char* source_code) {
     lexer_init(source_code);
     compiler_init();
+
+    loaded_source_code = source_code;
 }
 
 void interpret() {
@@ -94,26 +141,36 @@ static void print_bytecode(bytecode_t* bytecode) {
 
     printf("BYTECODE --------------------\n");
 
+    int last_line = -1;
+
     for (int i = 0; i < bytecode->count; ++i) {
         int op_index = i;
 
+        if (i < bytecode->count - 7 && bytecode->lines[i] != last_line) {
+            printf("------------------------------\n");
+            printf("%s\n", get_line(loaded_source_code, bytecode->lines[i] - 1));
+            printf("------------------------------\n");
+        }
+
+        last_line = bytecode->lines[i];
+
         switch (bytecode->instructions[i]) {
             case OP_LOAD_CONST: {
-                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i++]]);
+                printf("%d: (line %d) %s\n", op_index, bytecode->lines[i], OP_CODE_LABELS[bytecode->instructions[i++]]);
 
                 byte_t bytes[2];
                 for (int j = i; j < i + 2; j++) {
                     bytes[j - i] = bytecode->instructions[j];
                 }
 
-                printf("%d: %d\n", op_index + 1, bytes[0]);
-                printf("%d: %d\n", op_index + 2, bytes[1]);
+                printf("%d: (line %d) %d\n", op_index + 1, bytecode->lines[i], bytes[0]);
+                printf("%d: (line %d) %d\n", op_index + 2, bytecode->lines[i], bytes[1]);
 
                 i += 1;
                 break;
             }
             default: {
-                printf("%d: %s\n", op_index, OP_CODE_LABELS[bytecode->instructions[i]]);
+                printf("%d: (line %d) %s\n", op_index, bytecode->lines[i], OP_CODE_LABELS[bytecode->instructions[i]]);
                 break;
             }
         }

@@ -13,6 +13,22 @@
 
 virtual_machine_t vm;
 
+static inline int line() {
+    return vm.bytecode->lines[vm.ip];
+}
+
+static inline byte_t current() {
+    return vm.bytecode->instructions[vm.ip];
+}
+
+static inline byte_t next() {
+    return vm.bytecode->instructions[vm.ip++];
+}
+
+static inline byte_t has_next() {
+    return vm.ip < vm.bytecode->count;
+}
+
 static void run_load_const();
 
 static void run_load_var();
@@ -48,24 +64,12 @@ static void run_print_string_literal(value_t* value);
 static void run_stack_clear();
 
 static void run_not_implemented() {
-    error_throw(ERROR_RUNTIME, "Unrecognized instruction", 0);
-}
-
-static inline byte_t current() {
-    return vm.bytecode->instructions[vm.ip];
-}
-
-static inline byte_t next() {
-    return vm.bytecode->instructions[vm.ip++];
-}
-
-static inline byte_t has_next() {
-    return vm.ip < vm.bytecode->count;
+    error_throw(ERROR_RUNTIME, "Unrecognized instruction", line());
 }
 
 static inline void stack_push(value_t value) {
     if (vm.stack_top == vm.stack + 256) {
-        error_throw(ERROR_RUNTIME, "Stack overflow (max capacity = 256)", 0);
+        error_throw(ERROR_RUNTIME, "Stack overflow (max capacity = 256)", line());
     }
 
     *vm.stack_top = value;
@@ -168,99 +172,123 @@ void vm_run() {
         DISPATCH();
 
         label_load_const:
+            //printf("run_load_const\n");
             run_load_const();
             DISPATCH();
 
         label_load_var:
+            //printf("run_load_var\n");
             run_load_var();
             DISPATCH();
 
         label_store_var:
+            //printf("run_store_var\n");
             run_store_var();
             DISPATCH();
 
         label_func_def:
+            //printf("run_func_def\n");
             run_func_def();
             DISPATCH();
 
         label_func_end:
+            //printf("run_func_end\n");
             run_func_end();
             DISPATCH();
 
         label_return:
+            //printf("run_return\n");
             run_return();
             if (!has_next()) break;
             DISPATCH();
 
         label_call:
+            //printf("run_call\n");
             run_call();
             DISPATCH();
 
         label_not_implemented:
+            //printf("run_not_implemented\n");
             run_not_implemented();
             DISPATCH();
 
         label_jump:
+            //printf("run_jump\n");
             run_jump();
             DISPATCH();
 
         label_jump_if_false:
+            //printf("run_jump_if_false\n");
             run_jump_if_false();
             DISPATCH();
 
         label_add:
+            //printf("run_add\n");
             run_add();
             DISPATCH();
 
         label_sub:
+            //printf("run_sub\n");
             run_sub();
             DISPATCH();
 
         label_mul:
+            //printf("run_mul\n");
             run_mul();
             DISPATCH();
 
         label_div:
+            //printf("run_div\n");
             run_div();
             DISPATCH();
 
         label_cmp_eq:
+            //printf("run_cmp_eq\n");
             run_cmp_eq();
             DISPATCH();
 
         label_cmp_ne:
+            //printf("run_cmp_ne\n");
             run_cmp_ne();
             DISPATCH();
 
         label_cmp_lt:
+            //printf("run_cmp_lt\n");
             run_cmp_lt();
             DISPATCH();
 
         label_cmp_le:
+            //printf("run_cmp_le\n");
             run_cmp_le();
             DISPATCH();
 
         label_cmp_gt:
+            //printf("run_cmp_gt\n");
             run_cmp_gt();
             DISPATCH();
 
         label_cmp_ge:
+            //printf("run_cmp_ge\n");
             run_cmp_ge();
             DISPATCH();
 
         label_and:
+            //printf("run_and\n");
             run_and();
             DISPATCH();
 
         label_or:
+            //printf("run_or\n");
             run_or();
             DISPATCH();
 
         label_print:
+            //printf("run_print\n");
             run_print();
             DISPATCH();
 
         label_stack_clear:
+            //printf("run_stack_clear\n");
             run_stack_clear();
             DISPATCH();
     }
@@ -296,7 +324,7 @@ static value_t* load_var(char* identifier) {
     value_t* local_var = load_local_var(identifier);
 
     if (global_var == NULL && local_var == NULL) {
-        error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", 0);
+        error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", line());
     }
 
     return global_var == NULL ? local_var : global_var;
@@ -403,7 +431,7 @@ static void run_add() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot add two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot add two values of different datatypes", line());
         return;
     }
 
@@ -419,7 +447,7 @@ static void run_add() {
             char* new_string = (char*)malloc((strlen1 + strlen2) * sizeof(char));
 
             if (new_string == NULL) {
-                error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", 0);
+                error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", line());
                 return;
             }
 
@@ -430,7 +458,7 @@ static void run_add() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for add", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for add", line());
         }
     }
 }
@@ -458,7 +486,7 @@ static void run_cmp_eq() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_eq two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_eq two values of different datatypes", line());
         return;
     }
 
@@ -485,7 +513,7 @@ static void run_cmp_eq() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_eq", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_eq", line());
         }
     }
 }
@@ -495,7 +523,7 @@ static void run_cmp_ne() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_ne two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_ne two values of different datatypes", line());
         return;
     }
 
@@ -522,7 +550,7 @@ static void run_cmp_ne() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ne", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ne", line());
         }
     }
 }
@@ -532,7 +560,7 @@ static void run_cmp_gt() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_gt two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_gt two values of different datatypes", line());
         return;
     }
 
@@ -542,7 +570,7 @@ static void run_cmp_gt() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_gt", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_gt", line());
         }
     }
 }
@@ -552,7 +580,7 @@ static void run_cmp_ge() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_ge two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_ge two values of different datatypes", line());
         return;
     }
 
@@ -562,7 +590,7 @@ static void run_cmp_ge() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ge", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ge", line());
         }
     }
 }
@@ -572,7 +600,7 @@ static void run_cmp_lt() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_lt two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_lt two values of different datatypes", line());
         return;
     }
 
@@ -582,7 +610,7 @@ static void run_cmp_lt() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_lt", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_lt", line());
         }
     }
 }
@@ -592,7 +620,7 @@ static void run_cmp_le() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_le two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot cmp_le two values of different datatypes", line());
         return;
     }
 
@@ -602,7 +630,7 @@ static void run_cmp_le() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_le", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_le", line());
         }
     }
 }
@@ -612,7 +640,7 @@ static void run_and() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot and two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot and two values of different datatypes", line());
         return;
     }
 
@@ -622,7 +650,7 @@ static void run_and() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for and", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for and", line());
         }
     }
 }
@@ -632,7 +660,7 @@ static void run_or() {
     value_t value2 = stack_pop();
 
     if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot or two values of different datatypes", 0);
+        error_throw(ERROR_RUNTIME, "Cannot or two values of different datatypes", line());
         return;
     }
 
@@ -642,7 +670,7 @@ static void run_or() {
             break;
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for or", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for or", line());
         }
     }
 }
@@ -677,7 +705,7 @@ static void run_print() {
             return run_print_string_literal(&value);
         }
         default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype in print statement", 0);
+            return error_throw(ERROR_RUNTIME, "Unknown datatype in print statement", line());
         }
     }
 }

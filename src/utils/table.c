@@ -19,7 +19,7 @@ static unsigned long hash_function(const char* str) {
 }
 
 table_t* table_init(int capacity) {
-    table_t* table = (table_t*)malloc(sizeof(table_t*));
+    table_t* table = (table_t*)malloc(sizeof(table_t));
     table->capacity = capacity;
     table->size = 0;
     table->buckets = (entry_t**)calloc(capacity, sizeof(entry_t*));

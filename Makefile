@@ -20,7 +20,7 @@ $(EXEC): $(OBJECTS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -O1 -c $< -o $@
+	$(CC) $(CFLAGS) -O3 -c $< -o $@
 
 clean:
 	rm -rf $(OBJ_DIR) $(EXEC)

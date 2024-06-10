@@ -17,25 +17,37 @@ bytecode_t* bytecode_init() {
     bytecode->count = 0;
     bytecode->capacity = BYTECODE_INITIAL_SIZE;
     bytecode->instructions = (byte_t*)malloc(BYTECODE_INITIAL_SIZE * sizeof(byte_t));
+    bytecode->lines = (int*)malloc(BYTECODE_INITIAL_SIZE * sizeof(int));
 
     if (bytecode->instructions == NULL) {
         free(bytecode);
         error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode array", 0);
     }
 
+    if (bytecode->lines == NULL) {
+        free(bytecode);
+        error_throw(ERROR_COMPILER, "Failed to allocate memory for lines array", 0);
+    }
+
     return bytecode;
 }
 
-void bytecode_add(bytecode_t* bytecode, byte_t instruction) {
+void bytecode_add(bytecode_t* bytecode, byte_t instruction, int line) {
     if (bytecode->count == bytecode->capacity) {
         bytecode->capacity += BYTECODE_INITIAL_SIZE;
         bytecode->instructions = (byte_t*)realloc(bytecode->instructions, bytecode->capacity * sizeof(byte_t));
+        bytecode->lines = (int*)realloc(bytecode->lines, bytecode->capacity * sizeof(int));
 
         if (bytecode->instructions == NULL) {
             error_throw(ERROR_COMPILER, "Failed to reallocate memory for bytecode array", 0);
         }
+
+        if (bytecode->lines == NULL) {
+            error_throw(ERROR_COMPILER, "Failed to reallocate memory for lines array", 0);
+        }
     }
 
     bytecode->instructions[bytecode->count] = instruction;
+    bytecode->lines[bytecode->count] = line;
     bytecode->count++;
 }
