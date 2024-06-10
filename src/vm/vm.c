@@ -11,6 +11,13 @@
 #include "vm/vm.h"
 #include "vm/pool.h"
 
+//#define DEBUG
+#define TYPE_CHECKING
+
+static inline void dump_instruction(char* instruction_name) {
+    printf("Running %s()\n", instruction_name);
+}
+
 virtual_machine_t vm;
 
 static inline int line() {
@@ -29,19 +36,36 @@ static inline byte_t has_next() {
     return vm.ip < vm.bytecode->count;
 }
 
-static void run_load_const();
+static inline value_t number(double number) {
+    value_t value;
+    value.type = TYPE_NUMBER;
+    value.as.number = number;
+    return value;
+}
 
+static inline value_t boolean(bool boolean) {
+    value_t value;
+    value.type = TYPE_BOOLEAN;
+    value.as.boolean = boolean;
+    return value;
+}
+
+static inline value_t string(char* string) {
+    value_t value;
+    value.type = TYPE_STRING;
+    value.as.string = string;
+    return value;
+}
+
+static void run_load_const();
 static void run_load_var();
 static void run_store_var();
-
 static void run_func_def();
 static void run_func_end();
 static void run_call();
 static void run_return();
-
 static void run_jump_if_false();
 static void run_jump();
-
 static void run_add();
 static void run_sub();
 static void run_mul();
@@ -52,17 +76,13 @@ static void run_cmp_gt();
 static void run_cmp_ge();
 static void run_cmp_lt();
 static void run_cmp_le();
-
 static void run_and();
 static void run_or();
-
 static void run_print();
 static void run_print_numeric_literal(value_t* value);
 static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
-
 static void run_stack_clear();
-
 static void run_not_implemented() {
     error_throw(ERROR_RUNTIME, "Unrecognized instruction", line());
 }
@@ -79,6 +99,42 @@ static inline void stack_push(value_t value) {
 static inline value_t stack_pop() {
     vm.stack_top--;
     return *vm.stack_top;
+}
+
+static inline value_t stack_pop_number() {
+    value_t value = stack_pop();
+
+    #ifdef TYPE_CHECKING
+    if (value.type != TYPE_NUMBER) {
+        error_throw(ERROR_RUNTIME, "Expected stack top to be a number", line());
+    }
+    #endif
+
+    return value;
+}
+
+static inline value_t stack_pop_boolean() {
+    value_t value = stack_pop();
+
+    #ifdef TYPE_CHECKING
+    if (value.type != TYPE_BOOLEAN) {
+        error_throw(ERROR_RUNTIME, "Expected stack top to be a boolean", line());
+    }
+    #endif
+
+    return value;
+}
+
+static inline value_t stack_pop_string() {
+    value_t value = stack_pop();
+    
+    #ifdef TYPE_CHECKING
+    if (value.type != TYPE_STRING) {
+        error_throw(ERROR_RUNTIME, "Expected stack top to be a string", line());
+    }
+    #endif
+
+    return value;
 }
 
 void vm_init(bytecode_t* bytecode) {
@@ -297,6 +353,10 @@ void vm_run() {
 }
 
 static void run_load_const() {
+    #ifdef DEBUG
+    dump_instruction("run_load_const");
+    #endif
+
     byte_t bytes[2];
     bytes[0] = next();
     bytes[1] = next();
@@ -331,14 +391,22 @@ static value_t* load_var(char* identifier) {
 }
 
 static void run_load_var() {
-    value_t identifier = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_load_var");
+    #endif
+
+    value_t identifier = stack_pop_string();
     value_t* value = load_var(identifier.as.string);
 
     stack_push(*value);
 }
 
 static void run_store_var() {
-    value_t identifier = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_store_var");
+    #endif
+
+    value_t identifier = stack_pop_string();
     value_t value = stack_pop();
 
     if (call_stack_current(vm.call_stack) == NULL) {
@@ -369,16 +437,28 @@ static inline void skip_func_def() {
 }
 
 static void run_func_def() {
-    value_t func_identifier = stack_pop();
-    table_set(vm.table, func_identifier.as.string, value_create_number(vm.ip));
+    #ifdef DEBUG
+    dump_instruction("run_func_def");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    table_set(vm.table, identifier.as.string, number(vm.ip));
 
     skip_func_def();
 }
 
-static void run_func_end() {}
+static void run_func_end() {
+    #ifdef DEBUG
+    dump_instruction("run_func_end");
+    #endif
+}
 
 static void run_call() {
-    value_t func_arg_count = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_call");
+    #endif
+
+    value_t func_arg_count = stack_pop_number();
     byte_t arg_count = func_arg_count.as.number;
 
     value_t args[arg_count];
@@ -396,6 +476,10 @@ static void run_call() {
 }
 
 static void run_return() {
+    #ifdef DEBUG
+    dump_instruction("run_return");
+    #endif
+
     value_t return_value = stack_pop();
     call_frame_t call_frame = call_stack_pop(vm.call_stack);
 
@@ -411,8 +495,12 @@ static void run_return() {
 }
 
 static void run_jump_if_false() {
-    value_t label_index_value = stack_pop();
-    value_t boolean_value = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_jump_if_false");
+    #endif
+
+    value_t label_index_value = stack_pop_number();
+    value_t boolean_value = stack_pop_boolean();
 
     if (boolean_value.as.boolean == false) {
         long jump_ip = (long)label_index_value.as.number;
@@ -421,67 +509,65 @@ static void run_jump_if_false() {
 }
 
 static void run_jump() {
-    value_t label_index_value = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_jump");
+    #endif
+
+    value_t label_index_value = stack_pop_number();
     long jump_ip = (long)label_index_value.as.number;
     vm.ip = jump_ip;
 }
 
 static void run_add() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_add");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot add two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_NUMBER: {
-            stack_push(value_create_number(value2.as.number + value1.as.number));
-            break;
-        }
-        case TYPE_STRING: {
-            size_t strlen1 = strlen(value1.as.string);
-            size_t strlen2 = strlen(value2.as.string);
-
-            char* new_string = (char*)malloc((strlen1 + strlen2) * sizeof(char));
-
-            if (new_string == NULL) {
-                error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", line());
-                return;
-            }
-
-            strcpy(new_string, value2.as.string);
-            strcat(new_string, value1.as.string);
-
-            stack_push(value_create_string(new_string));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for add", line());
-        }
-    }
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(number(value2.as.number + value1.as.number));
 }
 
 static void run_sub() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
-    stack_push(value_create_number(value2.as.number - value1.as.number));
+    #ifdef DEBUG
+    dump_instruction("run_sub");
+    #endif
+
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(number(value2.as.number - value1.as.number));
 }
 
 static void run_mul() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
-    stack_push(value_create_number(value2.as.number * value1.as.number));
+    #ifdef DEBUG
+    dump_instruction("run_mul");
+    #endif
+
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(number(value2.as.number * value1.as.number));
 }
 
 static void run_div() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
-    stack_push(value_create_number(value2.as.number / value1.as.number));
+    #ifdef DEBUG
+    dump_instruction("run_div");
+    #endif
+
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+
+    if (value2.as.number == 0) {
+        return error_throw(ERROR_RUNTIME, "Division by zero", line());
+    }
+
+    stack_push(number(value2.as.number / value1.as.number));
 }
 
 static void run_cmp_eq() {
+    #ifdef DEBUG
+    dump_instruction("run_cmp_eq");
+    #endif
+
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -492,11 +578,11 @@ static void run_cmp_eq() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number == value1.as.number));
+            stack_push(boolean(value2.as.number == value1.as.number));
             break;
         }
         case TYPE_BOOLEAN: {
-            stack_push(value_create_boolean(value2.as.boolean == value1.as.boolean));
+            stack_push(boolean(value2.as.boolean == value1.as.boolean));
             break;
         }
         case TYPE_STRING: {
@@ -504,12 +590,12 @@ static void run_cmp_eq() {
             size_t strlen2 = strlen(value2.as.string);
 
             if (strlen1 != strlen2) {
-                stack_push(value_create_boolean(false));
+                stack_push(boolean(false));
                 break;
             }
 
             bool strings_equal = strcmp(value2.as.string, value1.as.string) == 0;
-            stack_push(value_create_boolean(strings_equal));
+            stack_push(boolean(strings_equal));
             break;
         }
         default: {
@@ -519,6 +605,10 @@ static void run_cmp_eq() {
 }
 
 static void run_cmp_ne() {
+    #ifdef DEBUG
+    dump_instruction("run_cmp_ne");
+    #endif
+
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();
 
@@ -529,11 +619,11 @@ static void run_cmp_ne() {
 
     switch (value1.type) {
         case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number != value1.as.number));
+            stack_push(boolean(value2.as.number != value1.as.number));
             break;
         }
         case TYPE_BOOLEAN: {
-            stack_push(value_create_boolean(value2.as.boolean != value1.as.boolean));
+            stack_push(boolean(value2.as.boolean != value1.as.boolean));
             break;
         }
         case TYPE_STRING: {
@@ -541,12 +631,12 @@ static void run_cmp_ne() {
             size_t strlen2 = strlen(value2.as.string);
 
             if (strlen1 != strlen2) {
-                stack_push(value_create_boolean(true));
+                stack_push(boolean(true));
                 break;
             }
 
             bool strings_equal = strcmp(value2.as.string, value1.as.string) != 0;
-            stack_push(value_create_boolean(strings_equal));
+            stack_push(boolean(strings_equal));
             break;
         }
         default: {
@@ -556,123 +646,63 @@ static void run_cmp_ne() {
 }
 
 static void run_cmp_gt() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_cmp_gt");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_gt two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number > value1.as.number));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_gt", line());
-        }
-    }
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(boolean(value2.as.number > value1.as.number));
 }
 
 static void run_cmp_ge() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_cmp_ge");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_ge two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number >= value1.as.number));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_ge", line());
-        }
-    }
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(boolean(value2.as.number >= value1.as.number));
 }
 
 static void run_cmp_lt() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_cmp_lt");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_lt two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number < value1.as.number));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_lt", line());
-        }
-    }
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(boolean(value2.as.number < value1.as.number));
 }
 
 static void run_cmp_le() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_cmp_le");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot cmp_le two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_NUMBER: {
-            stack_push(value_create_boolean(value2.as.number <= value1.as.number));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for cmp_le", line());
-        }
-    }
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+    stack_push(boolean(value2.as.number <= value1.as.number));
 }
 
 static void run_and() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_and");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot and two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_BOOLEAN: {
-            stack_push(value_create_boolean(value2.as.boolean && value1.as.boolean));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for and", line());
-        }
-    }
+    value_t value1 = stack_pop_boolean();
+    value_t value2 = stack_pop_boolean();
+    stack_push(boolean(value2.as.boolean && value1.as.boolean));
 }
 
 static void run_or() {
-    value_t value1 = stack_pop();
-    value_t value2 = stack_pop();
+    #ifdef DEBUG
+    dump_instruction("run_or");
+    #endif
 
-    if (value2.type != value1.type) {
-        error_throw(ERROR_RUNTIME, "Cannot or two values of different datatypes", line());
-        return;
-    }
-
-    switch (value1.type) {
-        case TYPE_BOOLEAN: {
-            stack_push(value_create_boolean(value2.as.boolean || value1.as.boolean));
-            break;
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype for or", line());
-        }
-    }
+    value_t value1 = stack_pop_boolean();
+    value_t value2 = stack_pop_boolean();
+    stack_push(boolean(value2.as.boolean || value1.as.boolean));
 }
 
 static inline void run_print_numeric_literal(value_t* value) {
@@ -692,6 +722,10 @@ static inline void run_print_string_literal(value_t* value) {
 }
 
 static void run_print() {
+    #ifdef DEBUG
+    dump_instruction("run_print");
+    #endif
+
     value_t value = stack_pop();
 
     switch (value.type) {
@@ -711,6 +745,10 @@ static void run_print() {
 }
 
 static void run_stack_clear() {
+    #ifdef DEBUG
+    dump_instruction("run_stack_clear");
+    #endif
+
     value_t stack_item_count = stack_pop();
 
     for (int i = 0; i < (int)stack_item_count.as.number; i++) {
