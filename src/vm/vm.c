@@ -292,9 +292,8 @@ static void run_load_num_const() {
     if (DEBUG == true) printf("Running run_load_num_const\n");
 
     byte_t bytes[2];
-    for (size_t i = 0; i < 2; i++) {
-        bytes[i] = next();
-    }
+    bytes[0] = next();
+    bytes[1] = next();
 
     uint16_t pool_index = bytes_to_uint16(bytes);
     value_t* value = pool_get(vm.pool, pool_index);
@@ -313,10 +312,8 @@ static void run_load_str_const() {
     if (DEBUG == true) printf("Running run_load_str_const\n");
 
     byte_t bytes[2];
-
-    for (size_t i = 0; i < 2; i++) {
-        bytes[i] = next();
-    }
+    bytes[0] = next();
+    bytes[1] = next();
 
     uint16_t pool_index = bytes_to_uint16(bytes);
     value_t* value = pool_get(vm.pool, pool_index);
@@ -424,13 +421,7 @@ static void run_call() {
     }
 
     value_t func_ip = stack_pop();
-
-    call_frame_t call_frame;
-    call_frame.ra = vm.ip;
-    call_frame.table = table_init(50);
-
-    call_stack_push(vm.call_stack, call_frame);
-
+    call_stack_push(vm.call_stack, (call_frame_t){.ra = vm.ip, .table = table_init(50)});
     vm.ip = (long)func_ip.as.number;
 
     for (int i = 0; i < arg_count; i++) {
@@ -455,57 +446,6 @@ static void run_return() {
     }
 }
 
-static inline long get_label_ip(long label_index) {
-    long current_ip = 0;
-
-    while (current_ip < vm.bytecode->count) {
-        if (vm.bytecode->instructions[current_ip] == OP_LABEL) {
-            if (vm.bytecode->instructions[++current_ip] == OP_LOAD_NUM_CONST) {
-                current_ip++;
-
-                byte_t bytes[2];
-                for (int i = 0; i < 2; i++) {
-                    bytes[i] = vm.bytecode->instructions[current_ip + i];
-                }
-
-                uint16_t pool_index = bytes_to_uint16(bytes);
-                value_t* value = pool_get(vm.pool, pool_index);
-
-                if (value->type != TYPE_NUMBER) {
-                    error_throw(ERROR_RUNTIME, "get_label_ip pool value is not a number", 0);
-                }
-
-                long found_label_index = (long)value->as.number;
-                current_ip += 1;
-
-                if (found_label_index == label_index) {
-                    return current_ip + 1;
-                }
-            }
-        } else {
-            if (vm.bytecode->instructions[current_ip] == OP_LOAD_NUM_CONST) {
-                current_ip += 3;
-                continue;
-            }
-
-            if (vm.bytecode->instructions[current_ip] == OP_LOAD_BOOL_CONST) {
-                current_ip += 2;
-                continue;
-            }
-
-            if (vm.bytecode->instructions[current_ip] == OP_LOAD_STR_CONST) {
-                current_ip += 3;
-                continue;
-            }
-
-            current_ip++;
-        }
-    }
-
-    error_throw(ERROR_RUNTIME, "Could not find a label with the given label index", 0);
-    return 0;
-}
-
 static void run_jump_if_false() {
     if (DEBUG == true) printf("Running run_jump_if_false\n");
 
@@ -521,7 +461,7 @@ static void run_jump_if_false() {
     }
 
     if (boolean_value.as.boolean == false) {
-        long jump_ip = get_label_ip((long)label_index_value.as.number);
+        long jump_ip = (long)label_index_value.as.number;
         vm.ip = jump_ip;
     }
 }
@@ -530,7 +470,7 @@ static void run_jump() {
     if (DEBUG == true) printf("Running run_jump\n");
 
     value_t label_index_value = stack_pop();
-    long jump_ip = get_label_ip((long)label_index_value.as.number);
+    long jump_ip = (long)label_index_value.as.number;
     vm.ip = jump_ip;
 }
 
@@ -550,32 +490,31 @@ static void run_add() {
         return;
     }
 
-    if (value2.type == TYPE_NUMBER && value1.type == TYPE_NUMBER) {
-        stack_push(value_create_number(value2.as.number + value1.as.number));
-        return;
-    }
-
-    if (value2.type == TYPE_STRING && value1.type == TYPE_STRING) {
-        size_t strlen1 = strlen(value1.as.string);
-        size_t strlen2 = strlen(value2.as.string);
-
-        char* new_string = (char*)malloc((strlen1 + strlen2) * sizeof(char));
-
-        if (new_string == NULL) {
-            error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", 0);
-            return;
+    switch (value1.type) {
+        case TYPE_NUMBER: {
+            stack_push(value_create_number(value2.as.number + value1.as.number));
+            break;
         }
+        case TYPE_STRING: {
+            size_t strlen1 = strlen(value1.as.string);
+            size_t strlen2 = strlen(value2.as.string);
 
-        for (int i = 0; i < strlen2; i++) {
-            new_string[i] = value2.as.string[i];
+            char* new_string = (char*)malloc((strlen1 + strlen2) * sizeof(char));
+
+            if (new_string == NULL) {
+                error_throw(ERROR_RUNTIME, "Failed to allocate memory for string literal", 0);
+                return;
+            }
+
+            strcpy(new_string, value2.as.string);
+            strcat(new_string, value1.as.string);
+
+            stack_push(value_create_string(new_string));
+            break;
         }
-
-        for (int i = 0; i < strlen1; i++) {
-            new_string[strlen2 + i] = value1.as.string[i];
+        default: {
+            return error_throw(ERROR_RUNTIME, "Unknown datatype for add", 0);
         }
-
-        stack_push(value_create_string(new_string));
-        return;
     }
 }
 

@@ -16,12 +16,6 @@ static bool DEBUG = false;
 
 compiler_t compiler;
 
-long label_index = 0;
-
-static long get_label() {
-    return label_index++;
-}
-
 static void emit(byte_t instruction) {
     bytecode_add(compiler.bytecode, instruction);
 }
@@ -115,7 +109,6 @@ static double get_main_func_ip() {
 
 static void emit_main_func_call() {
     double main_func_ip = get_main_func_ip();
-    printf("main_function_ip = %.2f\n", main_func_ip);
     emit_numeric_literal_num(main_func_ip);
     emit_numeric_literal_num(0);
     emit(OP_CALL);
@@ -292,6 +285,19 @@ static void compile_func_declaration_body() {
     }
 }
 
+static void update_jump_values(int ip1, int ip2) {
+    value_t value;
+    value.type = TYPE_NUMBER;
+    value.as.number = ip2;
+
+    // TODO: don't store jump ips into constant pool, rather a separate pool
+    uint16_t value_index = pool_add(compiler.pool, value);
+    
+    byte_t* bytes = uint16_to_bytes(value_index);
+    compiler.bytecode->instructions[ip1 + 1] = bytes[0];
+    compiler.bytecode->instructions[ip1 + 2] = bytes[1];
+}
+
 static void compile_conditional_statement() {
     if (DEBUG == true) printf("Compiling compile_conditional_statement\n");
 
@@ -299,10 +305,9 @@ static void compile_conditional_statement() {
     assert(TOKEN_OPEN_PAREN);
     compile_expression();
 
-    long label_if_end = get_label();
-    long label_else_end = get_label();
-
-    emit_numeric_literal_num((double)label_if_end);
+    int ip1 = compiler.bytecode->count;
+    // dummy value 0
+    emit_numeric_literal_num(0);
     emit(OP_JUMP_IF_FALSE);
 
     assert(TOKEN_CLOSE_PAREN);
@@ -315,16 +320,18 @@ static void compile_conditional_statement() {
     assert(TOKEN_CLOSE_BRACE);
 
     if (peek().type != TOKEN_ELSE) {
-        emit(OP_LABEL);
-        emit_numeric_literal_num((double)label_if_end);
+        int ip2 = compiler.bytecode->count;
+        update_jump_values(ip1, ip2);
         return;
     }
 
-    emit_numeric_literal_num((double)label_else_end);
+    int ip3 = compiler.bytecode->count;
+    // dummy value 0
+    emit_numeric_literal_num(0);
     emit(OP_JUMP);
 
-    emit(OP_LABEL);
-    emit_numeric_literal_num((double)label_if_end);
+    int ip4 = compiler.bytecode->count;
+    update_jump_values(ip1, ip4);
 
     assert(TOKEN_ELSE);
     assert(TOKEN_OPEN_BRACE);
@@ -335,26 +342,24 @@ static void compile_conditional_statement() {
 
     assert(TOKEN_CLOSE_BRACE);
 
-    emit(OP_LABEL);
-    emit_numeric_literal_num((double)label_else_end);
+    int ip5 = compiler.bytecode->count;
+    update_jump_values(ip3, ip5);
 }
 
 static void compile_while_statement() {
     if (DEBUG == true) printf("Compiling compile_while_statement\n");
 
     assert(TOKEN_WHILE);
-
-    long label_while_condition_start = get_label();
-    long label_while_body_end = get_label();
-
     assert(TOKEN_OPEN_PAREN);
 
-    emit(OP_LABEL);
-    emit_numeric_literal_num((double)label_while_condition_start);
+    int ip1 = compiler.bytecode->count;
 
     compile_expression();
 
-    emit_numeric_literal_num((double)label_while_body_end);
+    int ip2 = compiler.bytecode->count;
+
+    // dummy value 0
+    emit_numeric_literal_num(0);
     emit(OP_JUMP_IF_FALSE);
 
     assert(TOKEN_CLOSE_PAREN);
@@ -366,11 +371,11 @@ static void compile_while_statement() {
 
     assert(TOKEN_CLOSE_BRACE);
 
-    emit_numeric_literal_num((double)label_while_condition_start);
+    emit_numeric_literal_num((double)ip1);
     emit(OP_JUMP);
 
-    emit(OP_LABEL);
-    emit_numeric_literal_num((double)label_while_body_end);
+    int ip3 = compiler.bytecode->count;
+    update_jump_values(ip2, ip3);
 }
 
 static void compile_call_statement() {
