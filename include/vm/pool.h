@@ -1,7 +1,7 @@
 #ifndef gen_lang_pool_h
 #define gen_lang_pool_h
 
-#include "vm/value.h"
+#include "utils/common.h"
 
 /**
  * @brief Object representing a constant pool

@@ -4,7 +4,6 @@
 #include "compiler/bytecode.h"
 #include "compiler/compiler.h"
 #include "compiler/instruction.h"
-#include "utils/table.h"
 #include "utils/common.h"
 #include "utils/error.h"
 #include "vm/callstack.h"
@@ -67,6 +66,7 @@ static void run_obj_end();
 static void run_new_obj();
 static void run_store_prop();
 static void run_array_def();
+static void run_array_get();
 static void run_call();
 static void run_return();
 static void run_jump_if_false();
@@ -142,6 +142,30 @@ static inline value_t stack_pop_string() {
     return value;
 }
 
+static inline value_t stack_pop_object() {
+    value_t value = stack_pop();
+    
+    #ifdef TYPE_CHECKING
+    if (value.type != TYPE_OBJECT) {
+        error_throw(ERROR_RUNTIME, "Expected stack top to be an object", line());
+    }
+    #endif
+
+    return value;
+}
+
+static inline value_t stack_pop_array() {
+    value_t value = stack_pop();
+    
+    #ifdef TYPE_CHECKING
+    if (value.type != TYPE_ARRAY) {
+        error_throw(ERROR_RUNTIME, "Expected stack top to be an array", line());
+    }
+    #endif
+
+    return value;
+}
+
 void vm_init(bytecode_t* bytecode) {
     vm.bytecode = bytecode;
     vm.ip = 0;
@@ -196,7 +220,7 @@ void vm_run() {
         &&label_store_prop,             // OP_STORE_PROP
 
         &&label_array_def,              // OP_ARRAY_DEF
-        &&label_not_implemented,        // OP_ARRAY_GET
+        &&label_array_get,              // OP_ARRAY_GET
         &&label_not_implemented,        // OP_ARRAY_SET
 
         &&label_not_implemented,        // OP_SIZE_OF
@@ -270,6 +294,10 @@ void vm_run() {
 
         label_array_def:
             run_array_def();
+            DISPATCH();
+
+        label_array_get:
+            run_array_get();
             DISPATCH();
 
         label_return:
@@ -489,24 +517,78 @@ static void run_obj_end() {
     #ifdef DEBUG
     dump_instruction("run_obj_end");
     #endif
+
+    call_frame_t call_frame = call_stack_pop(vm.call_stack);
+    vm.ip = call_frame.ra;
+    call_frame_free(&call_frame);
 }
 
 static void run_new_obj() {
     #ifdef DEBUG
     dump_instruction("run_new_obj");
     #endif
+
+    value_t identifier = stack_pop_string();
+    value_t* object_ip = table_get(vm.table, identifier.as.string);
+
+    value_t object;
+    object.type = TYPE_OBJECT;
+    object.as.object = *object_init();
+
+    // TODO: initialise table size to 0 ??? (it will most probably not be used)
+    call_stack_push(vm.call_stack, (call_frame_t){.ra = vm.ip, .table = table_init(50)});
+    vm.ip = (long)object_ip->as.number;
+
+    stack_push(object);
 }
 
 static void run_store_prop() {
     #ifdef DEBUG
     dump_instruction("run_store_prop");
     #endif
+
+    value_t identifier = stack_pop_string();
+    value_t value = stack_pop();
+    value_t object = stack_pop_object();
+
+    object_add_property(&(object.as.object), identifier.as.string, value);
+
+    stack_push(object);
 }
 
 static void run_array_def() {
     #ifdef DEBUG
     dump_instruction("run_array_def");
     #endif
+
+    value_t array_size = stack_pop_number();
+    array_t* array = array_init((int)array_size.as.number);
+
+    for (int i = 0; i < (int)array_size.as.number; i++) {
+        int index = ((int)array_size.as.number) - i - 1;
+        array_add_element(array, index, stack_pop());
+    }
+
+    value_t array_value;
+    array_value.type = TYPE_ARRAY;
+    array_value.as.array = *array;
+
+    stack_push(array_value);
+}
+
+static void run_array_get() {
+    #ifdef DEBUG
+    dump_instruction("run_array_get");
+    #endif
+
+    value_t index_value = stack_pop_number();
+    value_t array_value = stack_pop_array();
+
+    int index = (int)index_value.as.number;
+    array_t array = array_value.as.array;
+
+    value_t element_value = array_get_element(&array, index);
+    stack_push(element_value);
 }
 
 static void run_call() {
@@ -579,9 +661,25 @@ static void run_add() {
     dump_instruction("run_add");
     #endif
 
-    value_t value1 = stack_pop_number();
+    /* value_t value1 = stack_pop_number();
     value_t value2 = stack_pop_number();
-    stack_push(number(value2.as.number + value1.as.number));
+    stack_push(number(value2.as.number + value1.as.number)); */
+
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type == TYPE_ARRAY) {
+        array_append(&value2.as.array, value1);
+        stack_push(value2);
+        return;
+    }
+
+    if (value2.type == TYPE_NUMBER && value1.type == TYPE_NUMBER) {
+        stack_push(number(value2.as.number + value1.as.number));
+        return;
+    }
+
+    error_throw(ERROR_RUNTIME, "Unknown operands to OP_ADD", line());
 }
 
 static void run_sub() {
@@ -761,20 +859,72 @@ static void run_or() {
     stack_push(boolean(value2.as.boolean || value1.as.boolean));
 }
 
-static inline void run_print_numeric_literal(value_t* value) {
+static void run_print_newline();
+static void run_print_numeric_literal(value_t* value);
+static void run_print_boolean_literal(value_t* value);
+static void run_print_string_literal(value_t* value);
+static void run_print_array(value_t* value);
+static void run_print_object(value_t* value);
+static void run_print_any(value_t* value);
+
+static void run_print_newline() {
+    printf("\n");
+}
+
+static void run_print_numeric_literal(value_t* value) {
     if (value->as.number == (int)value->as.number) {
-        printf("%d\n", (int)value->as.number);
+        printf("%d", (int)value->as.number);
     } else {
-        printf("%.2f\n", value->as.number);
+        printf("%.2f", value->as.number);
     }
 }
 
-static inline void run_print_boolean_literal(value_t* value) {
-    printf("%s\n", value->as.boolean ? "true" : "false");
+static void run_print_boolean_literal(value_t* value) {
+    printf("%s", value->as.boolean ? "true" : "false");
 }
 
-static inline void run_print_string_literal(value_t* value) {
-    printf("%s\n", value->as.string);
+static void run_print_string_literal(value_t* value) {
+    printf("%s", value->as.string);
+}
+
+static void run_print_array(value_t* value) {
+    printf("[");
+
+    for (int i = 0; i < value->as.array.size; i++) {
+        if (value->as.array.elements[i].type == TYPE_STRING) printf("\"");
+        run_print_any(&value->as.array.elements[i]);
+        if (value->as.array.elements[i].type == TYPE_STRING) printf("\"");
+
+        if (i < value->as.array.size - 1) {
+            printf(", ");
+        }
+    }
+
+    printf("]");
+}
+
+static void run_print_object(value_t* value) {
+    printf("[object]: not implemented");
+}
+
+static void run_print_any(value_t* value) {
+    switch (value->type) {
+        case TYPE_NUMBER: {
+            return run_print_numeric_literal(value);
+        }
+        case TYPE_BOOLEAN: {
+            return run_print_boolean_literal(value);
+        }
+        case TYPE_STRING: {
+            return run_print_string_literal(value);
+        }
+        case TYPE_ARRAY: {
+            return run_print_array(value);
+        }
+        case TYPE_OBJECT: {
+            return run_print_object(value);
+        }
+    }
 }
 
 static void run_print() {
@@ -783,21 +933,8 @@ static void run_print() {
     #endif
 
     value_t value = stack_pop();
-
-    switch (value.type) {
-        case TYPE_NUMBER: {
-            return run_print_numeric_literal(&value);
-        }
-        case TYPE_BOOLEAN: {
-            return run_print_boolean_literal(&value);
-        }
-        case TYPE_STRING: {
-            return run_print_string_literal(&value);
-        }
-        default: {
-            return error_throw(ERROR_RUNTIME, "Unknown datatype in print statement", line());
-        }
-    }
+    run_print_any(&value);
+    run_print_newline();
 }
 
 static void run_stack_clear() {

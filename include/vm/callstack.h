@@ -2,7 +2,6 @@
 #define gen_lang_call_stack_h
 
 #include "utils/common.h"
-#include "utils/table.h"
 
 /**
  * @brief Object representing a call frame

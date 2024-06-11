@@ -4,9 +4,8 @@
 #include <stdbool.h>
 
 #include "compiler/bytecode.h"
-#include "value.h"
+#include "utils/common.h"
 #include "callstack.h"
-#include "utils/table.h"
 #include "pool.h"
 
 /**

@@ -9,7 +9,6 @@
 #include "compiler/compiler.h"
 #include "compiler/instruction.h"
 #include "utils/error.h"
-#include "utils/table.h"
 #include "utils/common.h"
 
 static bool DEBUG = false;
@@ -138,6 +137,7 @@ static void compile_logical_expression();
 static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
+static void compile_access();
 static void compile_call_expression();
 static double compile_call_expression_args();
 static void compile_primary_expression();
@@ -603,13 +603,25 @@ static void compile_additive_expression() {
 static void compile_multiplicative_expression() {
     if (DEBUG == true) printf("Compiling compile_multiplicative_expression\n");
 
-    compile_call_expression();
+    compile_access();
 
     while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
         token_t operator_token = advance();
 
-        compile_call_expression();
+        compile_access();
         compile_binary_operator(operator_token);
+    }
+}
+
+// TODO: add member expressions
+static void compile_access() {
+    compile_call_expression();
+
+    while (peek().type == TOKEN_OPEN_BRACKET) {
+        int line = assert(TOKEN_OPEN_BRACKET).line;
+        compile_expression();
+        assert(TOKEN_CLOSE_BRACKET);
+        emit(OP_ARRAY_GET, line);
     }
 }
 
