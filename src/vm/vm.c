@@ -64,6 +64,7 @@ static void run_func_end();
 static void run_obj_def();
 static void run_obj_end();
 static void run_new_obj();
+static void run_load_prop_const();
 static void run_store_prop();
 static void run_array_def();
 static void run_array_get();
@@ -216,7 +217,7 @@ void vm_run() {
         &&label_obj_end,                // OP_OBJ_END
         &&label_new_obj,                // OP_NEW_OBJ
         &&label_not_implemented,        // OP_LOAD_PROP
-        &&label_not_implemented,        // OP_LOAD_PROP_CONST
+        &&label_load_prop_const,        // OP_LOAD_PROP_CONST
         &&label_store_prop,             // OP_STORE_PROP
 
         &&label_array_def,              // OP_ARRAY_DEF
@@ -286,6 +287,10 @@ void vm_run() {
 
         label_new_obj:
             run_new_obj();
+            DISPATCH();
+
+        label_load_prop_const:
+            run_load_prop_const();
             DISPATCH();
 
         label_store_prop:
@@ -540,6 +545,23 @@ static void run_new_obj() {
     vm.ip = (long)object_ip->as.number;
 
     stack_push(object);
+}
+
+static void run_load_prop_const() {
+    #ifdef DEBUG
+    dump_instruction("run_load_prop_const");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    value_t object = stack_pop_object();
+
+    value_t* prop = table_get(object.as.object.properties, identifier.as.string);
+
+    if (prop == NULL) {
+        error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
+    }
+
+    stack_push(*prop);
 }
 
 static void run_store_prop() {

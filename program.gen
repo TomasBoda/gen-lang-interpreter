@@ -1,13 +1,17 @@
 
+object address {
+    var street = "Street";
+    var city = "City";
+}
+
 object person {
     var age = 10;
     var name = "John Doe";
+    var addr = new address;
 }
 
 func main() {
     var p = new person;
 
-    print p;
-
-    print "Hello";
+    print p.addr.city;
 }

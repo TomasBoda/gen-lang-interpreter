@@ -138,6 +138,7 @@ static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
 static void compile_access();
+static void compile_prop();
 static void compile_call_expression();
 static double compile_call_expression_args();
 static void compile_primary_expression();
@@ -617,12 +618,28 @@ static void compile_multiplicative_expression() {
 static void compile_access() {
     compile_call_expression();
 
-    while (peek().type == TOKEN_OPEN_BRACKET) {
-        int line = assert(TOKEN_OPEN_BRACKET).line;
-        compile_expression();
-        assert(TOKEN_CLOSE_BRACKET);
-        emit(OP_ARRAY_GET, line);
+    while (peek().type == TOKEN_DOT || peek().type == TOKEN_OPEN_BRACKET) {
+        switch (peek().type) {
+            case TOKEN_DOT: {
+                int line = assert(TOKEN_DOT).line;
+                compile_prop();
+                break;
+            }
+            case TOKEN_OPEN_BRACKET: {
+                int line = assert(TOKEN_OPEN_BRACKET).line;
+                compile_expression();
+                assert(TOKEN_CLOSE_BRACKET);
+                emit(OP_ARRAY_GET, line);
+                break;
+            }
+        }
     }
+}
+
+static void compile_prop() {
+    token_t identifier = assert(TOKEN_IDENTIFIER);
+    emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
+    emit(OP_LOAD_PROP_CONST, identifier.line);
 }
 
 static void compile_binary_operator(token_t operator_token) {

@@ -1,0 +1,17 @@
+
+
+var p = new person;
+
+print p.age;
+LOAD_CONST p
+LOAD_VAR
+LOAD_CONST age
+LOAD_PROP
+
+print p.age.something
+LOAD_CONST p
+LOAD_VAR
+LOAD_CONST age
+LOAD_PROP
+LOAD_CONST something
+LOAD_PROP
