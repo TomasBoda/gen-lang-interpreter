@@ -59,7 +59,7 @@ const char* OP_CODE_LABELS[] = {
     "OR",
 
     "PRINT",
-    "NEWLINE",
+    "ENDL",
 
     "STACK_CLEAR",
 };
@@ -132,7 +132,7 @@ void interpret() {
 
     double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;
 
-    printf("------------------------------\n");
+    printf("\n------------------------------\n");
     printf("INFO: Finished in %.2fs\n", elapsed_time);
 }
 

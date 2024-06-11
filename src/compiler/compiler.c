@@ -474,9 +474,14 @@ static void compile_print() {
     int line = assert(TOKEN_PRINT).line;
 
     compile_expression();
-    assert(TOKEN_SEMICOLON);
-
     emit(OP_PRINT, line);
+
+    if (peek().type == TOKEN_ENDL) {
+        line = assert(TOKEN_ENDL).line;
+        emit(OP_ENDL, line);
+    }
+
+    assert(TOKEN_SEMICOLON);
 }
 
 // EXPRESSIONS

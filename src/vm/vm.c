@@ -85,6 +85,7 @@ static void run_cmp_le();
 static void run_and();
 static void run_or();
 static void run_print();
+static void run_endl();
 static void run_print_numeric_literal(value_t* value);
 static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
@@ -247,7 +248,7 @@ void vm_run() {
         &&label_or,                     // OP_OR
 
         &&label_print,                  // OP_PRINT
-        &&label_not_implemented,        // OP_NEWLINE
+        &&label_endl,                   // OP_ENDL
 
         &&label_stack_clear,            // OP_STACK_CLEAR
     };
@@ -376,6 +377,10 @@ void vm_run() {
 
         label_print:
             run_print();
+            DISPATCH();
+
+        label_endl:
+            run_endl();
             DISPATCH();
 
         label_stack_clear:
@@ -956,6 +961,13 @@ static void run_print() {
 
     value_t value = stack_pop();
     run_print_any(&value);
+}
+
+static void run_endl() {
+    #ifdef DEBUG
+    dump_instruction("run_endl");
+    #endif
+
     run_print_newline();
 }
 

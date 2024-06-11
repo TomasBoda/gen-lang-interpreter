@@ -1,17 +1,30 @@
 
 object address {
-    var street = "Street";
-    var city = "City";
+    var street = "Down Street";
+    var city = "London";
 }
 
 object person {
-    var age = 10;
+    var age = 25;
     var name = "John Doe";
     var addr = new address;
 }
 
+func person_print_details(var p) {
+    print "Personal details" endl;
+    print "--------------------------------" endl;
+    print "| Name:    ";
+    print p.name endl;
+    print "| Age:     ";
+    print p.age endl;
+    print "| Address: ";
+    print p.addr.street;
+    print ", ";
+    print p.addr.city endl;
+    print "--------------------------------";
+}
+
 func main() {
     var p = new person;
-
-    print p.addr.city;
+    person_print_details(p);
 }

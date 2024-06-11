@@ -50,7 +50,7 @@ typedef enum {
     OP_OR,
 
     OP_PRINT,
-    OP_NEWLINE,
+    OP_ENDL,
 
     OP_STACK_CLEAR,
 
