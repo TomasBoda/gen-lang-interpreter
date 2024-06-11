@@ -122,6 +122,10 @@ static void compile_var_declaration();
 static void compile_func_declaration();
 static void compile_func_declaration_param_list();
 static void compile_func_declaration_body();
+static void compile_object_declaration();
+static void compile_object_declaration_body();
+static void compile_object_declaration_property();
+static void compile_array_instantiation_expression();
 static void compile_conditional_statement();
 static void compile_while_statement();
 static void compile_call_statement();
@@ -129,6 +133,7 @@ static void compile_return();
 static void compile_print();
 
 static void compile_expression();
+static void compile_object_instantiation_expression();
 static void compile_logical_expression();
 static void compile_relational_expression();
 static void compile_additive_expression();
@@ -182,8 +187,8 @@ bytecode_t* compile() {
             case TOKEN_FUNC:
                 compile_func_declaration();
                 break;
-            case TOKEN_PRINT:
-                compile_print();
+            case TOKEN_OBJECT:
+                compile_object_declaration();
                 break;
             default:
                 error_throw(ERROR_COMPILER, "Unrecognized top level statement", peek().line);
@@ -203,9 +208,14 @@ static void compile_var_declaration() {
 
     int line = assert(TOKEN_VAR).line;
     token_t identifier_token = assert(TOKEN_IDENTIFIER);
-    assert(TOKEN_ASSIGNMENT);
 
-    compile_expression();
+    if (peek().type == TOKEN_SEMICOLON) {
+        emit_numeric_literal_num(0, identifier_token.line);
+    } else {
+        assert(TOKEN_ASSIGNMENT);
+        compile_expression();
+    }
+
     assert(TOKEN_SEMICOLON);
 
     emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
@@ -289,17 +299,67 @@ static void compile_func_declaration_body() {
     }
 }
 
-static void update_jump_values(int ip1, int ip2) {
+static void compile_object_declaration() {
+    if (DEBUG == true) printf("Compiling compile_object_declaration\n");
+
+    int line = assert(TOKEN_OBJECT).line;
+    token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+    emit(OP_OBJ_DEF, line);
+
+    assert(TOKEN_OPEN_BRACE);
+    compile_object_declaration_body();
+    line = assert(TOKEN_CLOSE_BRACE).line;
+    emit(OP_OBJ_END, line);
+}
+
+static void compile_object_declaration_body() {
+    if (DEBUG == true) printf("Compiling compile_object_declaration_body\n");
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        switch (peek().type) {
+            case TOKEN_VAR: {
+                compile_object_declaration_property();
+                break;
+            }
+            default: {
+                return error_throw(ERROR_RUNTIME, "Unknown statement in object declaration body", peek().line);
+            }
+        }
+    }
+}
+
+static void compile_object_declaration_property() {
+    if (DEBUG == true) printf("Compiling compile_object_declaration_property\n");
+
+    int line = assert(TOKEN_VAR).line;
+    token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+    if (peek().type == TOKEN_SEMICOLON) {
+        emit_numeric_literal_num(0, identifier_token.line);
+    } else {
+        assert(TOKEN_ASSIGNMENT);
+        compile_expression();
+    }
+
+    assert(TOKEN_SEMICOLON);
+
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+    emit(OP_STORE_PROP, line);
+}
+
+static inline void update_jump_values(int source_ip, int jump_ip) {
     value_t value;
     value.type = TYPE_NUMBER;
-    value.as.number = ip2;
+    value.as.number = jump_ip;
 
     // TODO: don't store jump ips into constant pool, rather a separate pool
     uint16_t value_index = pool_add(compiler.pool, value);
     
     byte_t* bytes = uint16_to_bytes(value_index);
-    compiler.bytecode->instructions[ip1 + 1] = bytes[0];
-    compiler.bytecode->instructions[ip1 + 2] = bytes[1];
+    compiler.bytecode->instructions[source_ip + 1] = bytes[0];
+    compiler.bytecode->instructions[source_ip + 2] = bytes[1];
 }
 
 static void compile_conditional_statement() {
@@ -418,10 +478,53 @@ static void compile_print() {
     emit(OP_PRINT, line);
 }
 
+// EXPRESSIONS
+
 static void compile_expression() {
     if (DEBUG == true) printf("Compiling compile_expression\n");
 
-    compile_logical_expression();
+    switch (peek().type) {
+        case TOKEN_NEW: {
+            compile_object_instantiation_expression();
+            break;
+        }
+        case TOKEN_OPEN_BRACKET: {
+            compile_array_instantiation_expression();
+            break;
+        }
+        default: {
+            compile_logical_expression();
+            break;
+        }
+    }
+}
+
+static void compile_object_instantiation_expression() {
+    int line = assert(TOKEN_NEW).line;
+    token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), identifier_token.line);
+    emit(OP_NEW_OBJ, line);
+}
+
+static void compile_array_instantiation_expression() {
+    int line = assert(TOKEN_OPEN_BRACKET).line;
+
+    int count = 0;
+
+    while (peek().type != TOKEN_CLOSE_BRACKET) {
+        compile_expression();
+        count++;
+
+        if (peek().type == TOKEN_COMMA) {
+            advance();
+        }
+    }
+
+    assert(TOKEN_CLOSE_BRACKET);
+
+    emit_numeric_literal_num((double)count, line);
+    emit(OP_ARRAY_DEF, line);
 }
 
 static void compile_logical_expression() {

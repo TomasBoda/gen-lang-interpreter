@@ -62,6 +62,11 @@ static void run_load_var();
 static void run_store_var();
 static void run_func_def();
 static void run_func_end();
+static void run_obj_def();
+static void run_obj_end();
+static void run_new_obj();
+static void run_store_prop();
+static void run_array_def();
 static void run_call();
 static void run_return();
 static void run_jump_if_false();
@@ -183,14 +188,14 @@ void vm_run() {
         &&label_return,                 // OP_RETURN
         &&label_call,                   // OP_CALL
 
-        &&label_not_implemented,        // OP_OBJ_DEF
-        &&label_not_implemented,        // OP_OBJ_END
-        &&label_not_implemented,        // OP_NEW_OBJ
+        &&label_obj_def,                // OP_OBJ_DEF
+        &&label_obj_end,                // OP_OBJ_END
+        &&label_new_obj,                // OP_NEW_OBJ
         &&label_not_implemented,        // OP_LOAD_PROP
         &&label_not_implemented,        // OP_LOAD_PROP_CONST
-        &&label_not_implemented,        // OP_STORE_PROP
+        &&label_store_prop,             // OP_STORE_PROP
 
-        &&label_not_implemented,        // OP_ARRAY_DEF
+        &&label_array_def,              // OP_ARRAY_DEF
         &&label_not_implemented,        // OP_ARRAY_GET
         &&label_not_implemented,        // OP_ARRAY_SET
 
@@ -228,123 +233,119 @@ void vm_run() {
         DISPATCH();
 
         label_load_const:
-            //printf("run_load_const\n");
             run_load_const();
             DISPATCH();
 
         label_load_var:
-            //printf("run_load_var\n");
             run_load_var();
             DISPATCH();
 
         label_store_var:
-            //printf("run_store_var\n");
             run_store_var();
             DISPATCH();
 
         label_func_def:
-            //printf("run_func_def\n");
             run_func_def();
             DISPATCH();
 
         label_func_end:
-            //printf("run_func_end\n");
             run_func_end();
             DISPATCH();
 
+        label_obj_def:
+            run_obj_def();
+            DISPATCH();
+
+        label_obj_end:
+            run_obj_end();
+            DISPATCH();
+
+        label_new_obj:
+            run_new_obj();
+            DISPATCH();
+
+        label_store_prop:
+            run_store_prop();
+            DISPATCH();
+
+        label_array_def:
+            run_array_def();
+            DISPATCH();
+
         label_return:
-            //printf("run_return\n");
             run_return();
             if (!has_next()) break;
             DISPATCH();
 
         label_call:
-            //printf("run_call\n");
             run_call();
             DISPATCH();
 
         label_not_implemented:
-            //printf("run_not_implemented\n");
             run_not_implemented();
             DISPATCH();
 
         label_jump:
-            //printf("run_jump\n");
             run_jump();
             DISPATCH();
 
         label_jump_if_false:
-            //printf("run_jump_if_false\n");
             run_jump_if_false();
             DISPATCH();
 
         label_add:
-            //printf("run_add\n");
             run_add();
             DISPATCH();
 
         label_sub:
-            //printf("run_sub\n");
             run_sub();
             DISPATCH();
 
         label_mul:
-            //printf("run_mul\n");
             run_mul();
             DISPATCH();
 
         label_div:
-            //printf("run_div\n");
             run_div();
             DISPATCH();
 
         label_cmp_eq:
-            //printf("run_cmp_eq\n");
             run_cmp_eq();
             DISPATCH();
 
         label_cmp_ne:
-            //printf("run_cmp_ne\n");
             run_cmp_ne();
             DISPATCH();
 
         label_cmp_lt:
-            //printf("run_cmp_lt\n");
             run_cmp_lt();
             DISPATCH();
 
         label_cmp_le:
-            //printf("run_cmp_le\n");
             run_cmp_le();
             DISPATCH();
 
         label_cmp_gt:
-            //printf("run_cmp_gt\n");
             run_cmp_gt();
             DISPATCH();
 
         label_cmp_ge:
-            //printf("run_cmp_ge\n");
             run_cmp_ge();
             DISPATCH();
 
         label_and:
-            //printf("run_and\n");
             run_and();
             DISPATCH();
 
         label_or:
-            //printf("run_or\n");
             run_or();
             DISPATCH();
 
         label_print:
-            //printf("run_print\n");
             run_print();
             DISPATCH();
 
         label_stack_clear:
-            //printf("run_stack_clear\n");
             run_stack_clear();
             DISPATCH();
     }
@@ -450,6 +451,61 @@ static void run_func_def() {
 static void run_func_end() {
     #ifdef DEBUG
     dump_instruction("run_func_end");
+    #endif
+}
+
+static inline void skip_obj_def() {
+    while (vm.ip < vm.bytecode->count) {
+        switch (current()) {
+            case OP_LOAD_CONST: {
+                next();
+                vm.ip += 2;
+                break;
+            }
+            case OP_OBJ_END: {
+                next();
+                return;
+            }
+            default: {
+                vm.ip += 1;
+                break;
+            }
+        }
+    }
+}
+
+static void run_obj_def() {
+    #ifdef DEBUG
+    dump_instruction("run_obj_def");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    table_set(vm.table, identifier.as.string, number(vm.ip));
+
+    skip_obj_def();
+}
+
+static void run_obj_end() {
+    #ifdef DEBUG
+    dump_instruction("run_obj_end");
+    #endif
+}
+
+static void run_new_obj() {
+    #ifdef DEBUG
+    dump_instruction("run_new_obj");
+    #endif
+}
+
+static void run_store_prop() {
+    #ifdef DEBUG
+    dump_instruction("run_store_prop");
+    #endif
+}
+
+static void run_array_def() {
+    #ifdef DEBUG
+    dump_instruction("run_array_def");
     #endif
 }
 
