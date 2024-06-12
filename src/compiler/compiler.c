@@ -127,7 +127,7 @@ static void compile_object_declaration_property();
 static void compile_array_instantiation_expression();
 static void compile_conditional_statement();
 static void compile_while_statement();
-static void compile_call_statement();
+static void compile_assignment_statement();
 static void compile_return();
 static void compile_print();
 
@@ -289,7 +289,7 @@ static void compile_func_declaration_body() {
                 break;
             }
             case TOKEN_IDENTIFIER: {
-                compile_call_statement();
+                compile_assignment_statement();
                 break;
             }
             default: {
@@ -443,14 +443,72 @@ static void compile_while_statement() {
     update_jump_values(ip2, ip3);
 }
 
-static void compile_call_statement() {
-    if (DEBUG == true) printf("Compiling compile_call_statement\n");
+static void compile_assignment_statement() {
+    token_t identifier = assert(TOKEN_IDENTIFIER);
 
-    compile_call_expression();
-    int line = assert(TOKEN_SEMICOLON).line;
+    // basic variable assignment
+    if (peek().type == TOKEN_ASSIGNMENT) {
+        assert(TOKEN_ASSIGNMENT);
+        compile_expression();
+        assert(TOKEN_SEMICOLON);
+        emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
+        emit(OP_STORE_VAR, identifier.line);
+        return;
+    }
 
-    emit_numeric_literal_num(1, line);
-    emit(OP_STACK_CLEAR, line);
+    // call statement
+    if (peek().type == TOKEN_OPEN_PAREN) {
+        int line = assert(TOKEN_OPEN_PAREN).line;
+        double arg_count = compile_call_expression_args();
+        assert(TOKEN_CLOSE_PAREN);
+        emit_numeric_literal_num(arg_count, line);
+        emit(OP_CALL, identifier.line);
+        line = assert(TOKEN_SEMICOLON).line;
+        emit_numeric_literal_num(1, line);
+        emit(OP_STACK_CLEAR, line);
+        return;
+    }
+
+    emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
+    emit(OP_LOAD_VAR, identifier.line);
+
+    token_t prop;
+    while (true) {
+        if (peek().type == TOKEN_DOT) {
+            assert(TOKEN_DOT);
+            prop = assert(TOKEN_IDENTIFIER);
+
+            if (peek().type == TOKEN_ASSIGNMENT) {
+                assert(TOKEN_ASSIGNMENT);
+                compile_expression();
+                assert(TOKEN_SEMICOLON);
+                emit_string_literal(substring(prop.start, prop.length), prop.line);
+                emit(OP_STORE_PROP, prop.line);
+                return;
+            } else {
+                emit_string_literal(substring(prop.start, prop.length), prop.line);
+                emit(OP_LOAD_PROP, prop.line);
+            }
+
+            continue;
+        }
+
+        if (peek().type == TOKEN_OPEN_BRACKET) {
+            assert(TOKEN_OPEN_BRACKET);
+            compile_expression();
+            assert(TOKEN_CLOSE_BRACKET);
+
+            if (peek().type == TOKEN_ASSIGNMENT) {
+                assert(TOKEN_ASSIGNMENT);
+                compile_expression();
+                assert(TOKEN_SEMICOLON);
+                emit(OP_ARRAY_SET, prop.line);
+                return;
+            } else {
+                emit(OP_ARRAY_GET, prop.line);
+            }
+        }
+    }
 }
 
 static void compile_return() {

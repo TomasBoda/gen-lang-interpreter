@@ -57,19 +57,26 @@ static inline value_t string(char* string) {
 }
 
 static void run_load_const();
+
 static void run_load_var();
 static void run_store_var();
+
 static void run_func_def();
 static void run_func_end();
+static void run_return();
+static void run_call();
+
 static void run_obj_def();
 static void run_obj_end();
 static void run_new_obj();
+static void run_load_prop();
 static void run_load_prop_const();
 static void run_store_prop();
+
 static void run_array_def();
 static void run_array_get();
-static void run_call();
-static void run_return();
+static void run_array_set();
+
 static void run_jump_if_false();
 static void run_jump();
 static void run_add();
@@ -216,13 +223,13 @@ void vm_run() {
         &&label_obj_def,                // OP_OBJ_DEF
         &&label_obj_end,                // OP_OBJ_END
         &&label_new_obj,                // OP_NEW_OBJ
-        &&label_not_implemented,        // OP_LOAD_PROP
+        &&label_load_prop,              // OP_LOAD_PROP
         &&label_load_prop_const,        // OP_LOAD_PROP_CONST
         &&label_store_prop,             // OP_STORE_PROP
 
         &&label_array_def,              // OP_ARRAY_DEF
         &&label_array_get,              // OP_ARRAY_GET
-        &&label_not_implemented,        // OP_ARRAY_SET
+        &&label_array_set,              // OP_ARRAY_SET
 
         &&label_not_implemented,        // OP_SIZE_OF
 
@@ -289,6 +296,10 @@ void vm_run() {
             run_new_obj();
             DISPATCH();
 
+        label_load_prop:
+            run_load_prop();
+            DISPATCH();
+
         label_load_prop_const:
             run_load_prop_const();
             DISPATCH();
@@ -303,6 +314,10 @@ void vm_run() {
 
         label_array_get:
             run_array_get();
+            DISPATCH();
+
+        label_array_set:
+            run_array_set();
             DISPATCH();
 
         label_return:
@@ -576,13 +591,30 @@ static void run_new_obj() {
     stack_push(object);
 }
 
+static void run_load_prop() {
+    #ifdef DEBUG
+    dump_instruction("run_load_prop");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    value_t object = stack_pop_object();
+
+    value_t* prop = table_get(object.as.object.properties, identifier.as.string);
+
+    if (prop == NULL) {
+        error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
+    }
+
+    stack_push(object);
+    stack_push(*prop);
+}
+
 static void run_load_prop_const() {
     #ifdef DEBUG
     dump_instruction("run_load_prop_const");
     #endif
 
     value_t identifier = stack_pop_string();
-
     value_t object = stack_pop_object();
 
     value_t* prop = table_get(object.as.object.properties, identifier.as.string);
@@ -641,6 +673,19 @@ static void run_array_get() {
 
     value_t element_value = array_get_element(&array, index);
     stack_push(element_value);
+}
+
+static void run_array_set() {
+    #ifdef DEBUG
+    dump_instruction("run_array_set");
+    #endif
+
+    value_t value = stack_pop();
+    value_t index_value = stack_pop_number();
+    value_t array_value = stack_pop_array();
+
+    int index = (int)index_value.as.number;
+    array_add_element(&array_value.as.array, index, value);
 }
 
 static void run_call() {

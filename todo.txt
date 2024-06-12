@@ -1,0 +1,34 @@
+
+person
+---------------
+STORE_VAR person
+
+person.age
+---------------
+LOAD_VAR person
+STORE_PROP age
+
+person.age.value
+---------------
+LOAD_VAR person
+LOAD_PROP age
+STORE_PROP value
+
+person[0]
+---------------
+LOAD_VAR person
+ARRAY_SET 0
+
+person.age[0]
+---------------
+LOAD_VAR person
+LOAD_PROP age
+ARRAY_SET 0
+
+person.age[0].something.value
+---------------
+LOAD_VAR person
+LOAD_PROP age
+ARRAY_GET 0
+LOAD_PROP something
+STORE_PROP value
