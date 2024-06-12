@@ -173,17 +173,16 @@ void vm_init(bytecode_t* bytecode) {
     vm.ip = 0;
     vm.stack_top = vm.stack;
 
-    vm.table = table_init(50);
+    vm.var_table = table_init(50);
+    vm.func_table = table_init(50);
+    vm.obj_table = table_init(50);
+
     vm.call_stack = call_stack_init();
     vm.pool = compiler_get_pool();
 }
 
 static void vm_free() {
-    if (vm.table != NULL) {
-        table_free(vm.table);
-        free(vm.table);
-        vm.table = NULL;
-    }
+    // TODO: free all the tables
 
     if (vm.call_stack != NULL) {
         call_stack_free(vm.call_stack);
@@ -407,7 +406,25 @@ static void run_load_const() {
 }
 
 static value_t* load_global_var(char* identifier) {
-    return table_get(vm.table, identifier);
+    value_t* variable = table_get(vm.var_table, identifier);
+
+    if (variable != NULL) {
+        return variable;
+    }
+
+    variable = table_get(vm.func_table, identifier);
+
+    if (variable != NULL) {
+        return variable;
+    }
+
+    variable = table_get(vm.obj_table, identifier);
+
+    if (variable != NULL) {
+        return variable;
+    }
+
+    return NULL;
 }
 
 static value_t* load_local_var(char* identifier) {
@@ -419,14 +436,21 @@ static value_t* load_local_var(char* identifier) {
 }
 
 static value_t* load_var(char* identifier) {
-    value_t* global_var = load_global_var(identifier);
+    // check for local variables first
     value_t* local_var = load_local_var(identifier);
 
-    if (global_var == NULL && local_var == NULL) {
-        error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", line());
+    if (local_var != NULL) {
+        return local_var;
     }
 
-    return global_var == NULL ? local_var : global_var;
+    // if local variable is not found, check for global variables
+    value_t* global_var = load_global_var(identifier);
+
+    if (global_var != NULL) {
+        return global_var;
+    }
+
+    return NULL;
 }
 
 static void run_load_var() {
@@ -449,7 +473,7 @@ static void run_store_var() {
     value_t value = stack_pop();
 
     if (call_stack_current(vm.call_stack) == NULL) {
-        table_set(vm.table, identifier.as.string, value);
+        table_set(vm.var_table, identifier.as.string, value);
     } else {
         table_set(call_stack_current(vm.call_stack)->table, identifier.as.string, value);
     }
@@ -481,7 +505,7 @@ static void run_func_def() {
     #endif
 
     value_t identifier = stack_pop_string();
-    table_set(vm.table, identifier.as.string, number(vm.ip));
+    table_set(vm.func_table, identifier.as.string, number(vm.ip));
 
     skip_func_def();
 }
@@ -518,7 +542,7 @@ static void run_obj_def() {
     #endif
 
     value_t identifier = stack_pop_string();
-    table_set(vm.table, identifier.as.string, number(vm.ip));
+    table_set(vm.obj_table, identifier.as.string, number(vm.ip));
 
     skip_obj_def();
 }
@@ -539,7 +563,7 @@ static void run_new_obj() {
     #endif
 
     value_t identifier = stack_pop_string();
-    value_t* object_ip = table_get(vm.table, identifier.as.string);
+    value_t* object_ip = table_get(vm.obj_table, identifier.as.string);
 
     value_t object;
     object.type = TYPE_OBJECT;
@@ -558,6 +582,7 @@ static void run_load_prop_const() {
     #endif
 
     value_t identifier = stack_pop_string();
+
     value_t object = stack_pop_object();
 
     value_t* prop = table_get(object.as.object.properties, identifier.as.string);

@@ -10,17 +10,17 @@ object person {
     var addr = new address;
 }
 
-func person_print_details(var p) {
+func person_print_details(var person) {
     print "Personal details" endl;
     print "--------------------------------" endl;
     print "| Name:    ";
-    print p.name endl;
+    print person.name endl;
     print "| Age:     ";
-    print p.age endl;
+    print person.age endl;
     print "| Address: ";
-    print p.addr.street;
+    print person.addr.street;
     print ", ";
-    print p.addr.city endl;
+    print person.addr.city endl;
     print "--------------------------------";
 }
 

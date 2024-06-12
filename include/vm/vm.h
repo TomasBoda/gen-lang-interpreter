@@ -17,7 +17,11 @@ typedef struct {
     value_t stack[256];
     value_t* stack_top;
     bytecode_t* bytecode;
-    table_t* table;
+
+    table_t* var_table;
+    table_t* func_table;
+    table_t* obj_table;
+
     call_stack_t* call_stack;
     pool_t* pool;
 } virtual_machine_t;
