@@ -37,10 +37,9 @@ func main() {
 ```
 
 ## Building & Running
-To build and run the interpreter with the example source code in the `program.gen` file, run the prepared bash script:
+To build and run the interpreter with the example program in the `program.gen` file, run the prepared bash script.
 ```bash
 ./interpret.sh
 ```
-The script will firstly build the sources and then run the `program.gen` file.
 
 by [Tomas Boda](https://github.com/TomasBoda)
