@@ -421,22 +421,16 @@ static void run_load_const() {
 }
 
 static value_t* load_global_var(char* identifier) {
-    value_t* variable = table_get(vm.var_table, identifier);
+    value_t* value = table_get(vm.var_table, identifier);
 
-    if (variable != NULL) {
-        return variable;
+    if (value != NULL) {
+        return value;
     }
 
-    variable = table_get(vm.func_table, identifier);
+    value = table_get(vm.func_table, identifier);
 
-    if (variable != NULL) {
-        return variable;
-    }
-
-    variable = table_get(vm.obj_table, identifier);
-
-    if (variable != NULL) {
-        return variable;
+    if (value != NULL) {
+        return value;
     }
 
     return NULL;
@@ -721,7 +715,7 @@ static void run_return() {
     vm.ip = call_frame.ra;
     stack_push(return_value);
 
-    call_frame_free(&call_frame);
+    //call_frame_free(&call_frame);
 
     // exit the virtual machine
     if (call_stack_current(vm.call_stack) == NULL) {
