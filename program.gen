@@ -1,21 +1,21 @@
+func fibonacci_recursive(var number) {
+    if (number <= 1) {
+        return number;
+    }
 
-object address {
-    var zip = 12345;
-    var names = [1, 2, 3];
+    return fibonacci_recursive(number - 1) + fibonacci_recursive(number - 2);
 }
 
-object person {
-    var age = 10;
-    var jobs = [1, 2, 3];
-    var addr = new address;
+func fibonacci(var n) {
+    var i = 0;
+
+    while (i < n) {
+        print fibonacci_recursive(i) endl;
+        var i = i + 1;
+    }
 }
 
 func main() {
-    var p = new person;
-
-    p.addr.zip = 555;
-    p.addr.names[1] = 999;
-
-    print p.addr.zip;
-    print p.addr.names[1];
+    var n = 30;
+    fibonacci(n);
 }

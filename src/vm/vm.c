@@ -13,11 +13,11 @@
 //#define DEBUG
 #define TYPE_CHECKING
 
-static inline void dump_instruction(char* instruction_name) {
-    printf("Running %s()\n", instruction_name);
-}
-
 virtual_machine_t vm;
+
+static inline void dump_instruction(char* instruction_name) {
+    printf("Running %s() on ip %d\n", instruction_name, vm.ip - 1);
+}
 
 static inline int line() {
     return vm.bytecode->lines[vm.ip];
@@ -694,7 +694,7 @@ static void run_call() {
     #endif
 
     value_t func_arg_count = stack_pop_number();
-    byte_t arg_count = func_arg_count.as.number;
+    int arg_count = (int)func_arg_count.as.number;
 
     value_t args[arg_count];
     for (int i = 0; i < arg_count; i++) {

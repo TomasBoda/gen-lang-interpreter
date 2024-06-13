@@ -459,6 +459,8 @@ static void compile_assignment_statement() {
     // call statement
     if (peek().type == TOKEN_OPEN_PAREN) {
         int line = assert(TOKEN_OPEN_PAREN).line;
+        emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
+        emit(OP_LOAD_VAR, identifier.line);
         double arg_count = compile_call_expression_args();
         assert(TOKEN_CLOSE_PAREN);
         emit_numeric_literal_num(arg_count, line);
@@ -679,6 +681,8 @@ static void compile_multiplicative_expression() {
 
 // TODO: add member expressions
 static void compile_access() {
+    if (DEBUG == true) printf("Compiling compile_access\n");
+
     compile_call_expression();
 
     while (peek().type == TOKEN_DOT || peek().type == TOKEN_OPEN_BRACKET) {
@@ -700,6 +704,8 @@ static void compile_access() {
 }
 
 static void compile_prop() {
+    if (DEBUG == true) printf("Compiling compile_prop\n");
+
     token_t identifier = assert(TOKEN_IDENTIFIER);
     emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
     emit(OP_LOAD_PROP_CONST, identifier.line);
