@@ -20,7 +20,7 @@ func fibonacci_recursive(var number) {
 }
 
 func fibonacci_print(var index, var value) {
-    print index + 1;
+    print index;
     print ": ";
     print value endl;
 }

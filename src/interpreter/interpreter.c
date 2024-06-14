@@ -127,7 +127,7 @@ void interpret() {
     vm_init(bytecode);
 
     clock_t start = clock();
-    vm_run();
+    vm_run(false);
     clock_t end = clock();
 
     double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;

@@ -9,11 +9,19 @@
 #include "vm/callstack.h"
 #include "vm/vm.h"
 #include "vm/pool.h"
+#include "vm/output.h"
 
 //#define DEBUG
 #define TYPE_CHECKING
 
+static bool is_testing = false;
+
 virtual_machine_t vm;
+output_t* output;
+
+output_t* vm_get_output() {
+    return output;
+}
 
 static inline void dump_instruction(char* instruction_name) {
     printf("Running %s() on ip %d\n", instruction_name, vm.ip - 1);
@@ -186,6 +194,8 @@ void vm_init(bytecode_t* bytecode) {
 
     vm.call_stack = call_stack_init();
     vm.pool = compiler_get_pool();
+
+    output = output_init();
 }
 
 static void vm_free() {
@@ -208,7 +218,9 @@ static void vm_free() {
     }
 }
 
-void vm_run() {
+void vm_run(bool test) {
+    is_testing = test;
+
     static void* dispatch_table[] = {
         &&label_load_const,             // OP_LOAD_CONST
 
@@ -1024,7 +1036,12 @@ static void run_print() {
     #endif
 
     value_t value = stack_pop();
-    run_print_any(&value);
+
+    if (is_testing) {
+        output_add(output, value);
+    } else {
+        run_print_any(&value);
+    }
 }
 
 static void run_endl() {

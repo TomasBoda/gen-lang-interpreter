@@ -7,6 +7,7 @@
 #include "utils/common.h"
 #include "callstack.h"
 #include "pool.h"
+#include "output.h"
 
 /**
  * @brief Object representing a virtual machine
@@ -37,6 +38,8 @@ void vm_init(bytecode_t* compiled_bytecode);
  * @brief Starts the virtual machine and interprets the bytecode
  * 
  */
-void vm_run();
+void vm_run(bool test);
+
+output_t* vm_get_output();
 
 #endif
