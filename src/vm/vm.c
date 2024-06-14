@@ -573,9 +573,9 @@ static void run_obj_end() {
     dump_instruction("run_obj_end");
     #endif
 
-    call_frame_t call_frame = call_stack_pop(vm.call_stack);
-    vm.ip = call_frame.ra;
-    call_frame_free(&call_frame);
+    call_frame_t* call_frame = call_stack_pop(vm.call_stack);
+    vm.ip = call_frame->ra;
+    call_frame_free(call_frame);
 }
 
 static void run_new_obj() {
@@ -722,12 +722,12 @@ static void run_return() {
     #endif
 
     value_t return_value = stack_pop();
-    call_frame_t call_frame = call_stack_pop(vm.call_stack);
+    call_frame_t* call_frame = call_stack_pop(vm.call_stack);
 
-    vm.ip = call_frame.ra;
+    vm.ip = call_frame->ra;
     stack_push(return_value);
 
-    //call_frame_free(&call_frame);
+    call_frame_free(call_frame);
 
     // exit the virtual machine
     if (call_stack_current(vm.call_stack) == NULL) {

@@ -42,7 +42,7 @@ void call_stack_push(call_stack_t* call_stack, call_frame_t call_frame);
  * @param call_stack call stack object to pop the call frame from
  * @return call_frame_t popped call frame
  */
-call_frame_t call_stack_pop(call_stack_t* call_stack);
+call_frame_t* call_stack_pop(call_stack_t* call_stack);
 
 /**
  * @brief Retrieves the current (most recent) call frame from the call stack
