@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd ..
 clear
 make -s clean
 make -s

@@ -13,6 +13,9 @@
 #include "vm/vm.h"
 #include "interpreter/interpreter.h"
 #include "utils/common.h"
+#include "utils/io.h"
+
+#define DEBUG
 
 const char* OP_CODE_LABELS[] = {
     "LOAD_CONST",
@@ -113,7 +116,6 @@ char* get_line(const char* str, int i) {
 void interpreter_init(const char* source_code) {
     lexer_init(source_code);
     compiler_init();
-
     loaded_source_code = source_code;
 }
 
@@ -122,7 +124,9 @@ void interpret() {
     printf("INFO: Compiled\n");
     printf("------------------------------\n");
 
+    #ifdef DEBUG
     print_bytecode(bytecode);
+    #endif
 
     vm_init(bytecode);
 
@@ -137,9 +141,16 @@ void interpret() {
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
-    return;
+    FILE *file = freopen("./debug/bytecode", "w", stdout);
+    
+    if (file == NULL) {
+        perror("Failed to open file");
+        return;
+    }
 
-    printf("BYTECODE --------------------\n");
+    write_file("./debug/bytecode", "Hello");
+
+    printf("BYTECODE\n");
 
     int last_line = -1;
 
@@ -176,5 +187,7 @@ static void print_bytecode(bytecode_t* bytecode) {
         }
     }
 
-    printf("-----------------------------\n");
+    printf("------------------------------\n");
+
+    freopen("/dev/tty", "w", stdout);
 }
