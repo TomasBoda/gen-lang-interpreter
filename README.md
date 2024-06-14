@@ -1,5 +1,5 @@
-# The GEN Programming Language Interpreter
-Interpreter for the GEN programming language written in C.
+# The GEN Programming Language
+GEN is a general-purpose, procedural, dynamically typed programming language based on a bytecode virtual machine interpreter written in C.
 
 ## About
 Below is an example code of the GEN programming language representing a recursive fibonacci implementation without caching.
