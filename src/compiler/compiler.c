@@ -688,7 +688,7 @@ static void compile_access() {
     while (peek().type == TOKEN_DOT || peek().type == TOKEN_OPEN_BRACKET) {
         switch (peek().type) {
             case TOKEN_DOT: {
-                int line = assert(TOKEN_DOT).line;
+                assert(TOKEN_DOT);
                 compile_prop();
                 break;
             }
@@ -698,6 +698,9 @@ static void compile_access() {
                 assert(TOKEN_CLOSE_BRACKET);
                 emit(OP_ARRAY_GET, line);
                 break;
+            }
+            default: {
+                error_throw(ERROR_COMPILER, "Unrecognized token in compiling access", peek().line);
             }
         }
     }

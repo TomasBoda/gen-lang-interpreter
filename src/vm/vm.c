@@ -23,9 +23,11 @@ output_t* vm_get_output() {
     return output;
 }
 
+#ifdef DEBUG
 static inline void dump_instruction(char* instruction_name) {
-    printf("Running %s() on ip %d\n", instruction_name, vm.ip - 1);
+    printf("Running %s() on ip %ld\n", instruction_name, vm.ip - 1);
 }
+#endif
 
 static inline int line() {
     return vm.bytecode->lines[vm.ip];
@@ -57,12 +59,12 @@ static inline value_t boolean(bool boolean) {
     return value;
 }
 
-static inline value_t string(char* string) {
+/* static inline value_t string(char* string) {
     value_t value;
     value.type = TYPE_STRING;
     value.as.string = string;
     return value;
-}
+} */
 
 static void run_load_const();
 

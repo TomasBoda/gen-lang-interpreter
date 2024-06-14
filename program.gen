@@ -26,6 +26,6 @@ func fibonacci_print(var index, var value) {
 }
 
 func main() {
-    var n = 30;
+    var n = 5;
     fibonacci(n);
 }

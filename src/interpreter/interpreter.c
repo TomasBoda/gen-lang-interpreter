@@ -16,6 +16,7 @@
 #include "utils/io.h"
 
 #define DEBUG
+#define VERSION "1.0.0"
 
 const char* OP_CODE_LABELS[] = {
     "LOAD_CONST",
@@ -120,8 +121,10 @@ void interpreter_init(const char* source_code) {
 }
 
 void interpret() {
+    printf("\033[32mINFO:\033[0m Starting GEN v%s\n", VERSION);
+
     bytecode_t* bytecode = compile();
-    printf("INFO: Compiled\n");
+    printf("\033[32mINFO:\033[0m Compiled successfully\n");
     printf("------------------------------\n");
 
     #ifdef DEBUG
@@ -137,7 +140,7 @@ void interpret() {
     double elapsed_time = (double)(end - start) / CLOCKS_PER_SEC;
 
     printf("\n------------------------------\n");
-    printf("INFO: Finished in %.2fs\n", elapsed_time);
+    printf("\033[32mINFO:\033[0m Finished in %.2fs\n", elapsed_time);
 }
 
 static void print_bytecode(bytecode_t* bytecode) {
@@ -167,7 +170,8 @@ static void print_bytecode(bytecode_t* bytecode) {
 
         switch (bytecode->instructions[i]) {
             case OP_LOAD_CONST: {
-                printf("%d: (line %d) %s\n", op_index, bytecode->lines[i], OP_CODE_LABELS[bytecode->instructions[i++]]);
+                printf("%d: (line %d) %s\n", op_index, bytecode->lines[i], OP_CODE_LABELS[bytecode->instructions[i]]);
+                i++;
 
                 byte_t bytes[2];
                 for (int j = i; j < i + 2; j++) {

@@ -44,7 +44,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
     output_t* actual_output = vm_get_output();
 
     if (actual_output->count != expected_output->count) {
-        printf("FAILED: (%s) expected output of size %d, got %d\n", test_name, expected_output->count, actual_output->count);
+        printf("\033[31mFAILED:\033[0m (%s) expected output of size %d, got %d\n", test_name, expected_output->count, actual_output->count);
         return;
     }
 
@@ -53,7 +53,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
         value_t actual = actual_output->values[i];
 
         if (expected.type != actual.type) {
-            printf("FAILED: (%s) expected value type to be %d, got %d\n", expected.type, actual.type);
+            printf("\033[31mFAILED:\033[0m (%s) expected value type to be %d, got %d\n", test_name, expected.type, actual.type);
             return;
         }
 
@@ -63,7 +63,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
                 number_t actual_value = actual.as.number;
 
                 if (expected_value != actual_value) {
-                    printf("FAILED: (%s) expected number value to be %.2f, got %.2f\n", test_name, expected_value, actual_value);
+                    printf("\033[31mFAILED:\033[0m (%s) expected number value to be %.2f, got %.2f\n", test_name, expected_value, actual_value);
                     return;
                 }
 
@@ -74,7 +74,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
                 boolean_t actual_value = actual.as.boolean;
 
                 if (expected_value != actual_value) {
-                    printf("FAILED: (%s) expected boolean value to be %d, got %d\n", test_name, expected_value, actual_value);
+                    printf("\033[31mFAILED:\033[0m (%s) expected boolean value to be %d, got %d\n", test_name, expected_value, actual_value);
                     return;
                 }
 
@@ -85,14 +85,14 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
                 string_t actual_value = actual.as.string;
 
                 if (strcmp(expected_value, actual_value) != 0) {
-                    printf("FAILED: (%s) expected string value to be \"%s\", got \"%s\"\n", test_name, expected_value, actual_value);
+                    printf("\033[31mFAILED:\033[0m (%s) expected string value to be \"%s\", got \"%s\"\n", test_name, expected_value, actual_value);
                     return;
                 }
 
                 break;
             }
             default: {
-                printf("ERROR: Unknown datatype in tests, cannot compare\n");
+                printf("\033[31mERROR:\033[0m Unknown datatype in tests, cannot compare\n");
                 exit(1);
                 break;
             }
@@ -100,12 +100,12 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
     }
 
     tests_passed++;
-    printf("PASSED: (%s)\n", test_name);
+    printf("\033[32mPASSED:\033[0m (%s)\n", test_name);
     return;
 }
 
 int main() {
-    printf("RUNNING TESTS\n");
+    printf("\033[32mINFO:\033[0m Starting tests\n");
     printf("--------------------------\n");
 
     // TEST 01
@@ -136,13 +136,18 @@ int main() {
         output_add(output, create_number(4));
         output_add(output, create_number(5));
         output_add(output, create_number(12));
-        output_add(output, create_number(3.5));
+        output_add(output, create_number(3.51));
 
         test("Arrays", "./tests/cases/case-02.gen", output);
     }
 
     printf("--------------------------\n");
-    printf("%d/%d TESTS PASSED\n", tests_passed, tests_total);
+
+    if (tests_passed == tests_total) {
+        printf("\033[32mINFO:\033[0m All tests \033[32mPASSED\033[0m\n");
+    } else {
+        printf("\033[31mINFO:\033[0m %d tests \033[31mFAILED\033[0m\n", tests_total - tests_passed);
+    }
 
     return 0;
 }
