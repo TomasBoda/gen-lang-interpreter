@@ -45,6 +45,7 @@ array_t* array_init(int size);
 void array_add_element(array_t* array, int index, value_t element);
 value_t array_get_element(array_t* array, int index);
 void array_append(array_t* array, value_t element);
+void array_remove(array_t* array, int count);
 
 object_t* object_init();
 void object_add_property(object_t* object, char* identifier, value_t element);

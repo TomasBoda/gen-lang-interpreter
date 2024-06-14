@@ -36,6 +36,17 @@ void array_append(array_t* array, value_t element) {
     array->elements[array->size - 1] = element;
 }
 
+void array_remove(array_t* array, int count) {
+    if (count >= array->size) {
+        array->size = 0;
+        free(array->elements);
+        array->elements = NULL;
+    } else {
+        array->size -= count;
+        array->elements = (value_t*)realloc(array->elements, array->size * sizeof(value_t));
+    }
+}
+
 object_t* object_init() {
     object_t* object = (object_t*)malloc(sizeof(object_t));
     object->properties = table_init(50);

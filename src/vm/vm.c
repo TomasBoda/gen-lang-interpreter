@@ -59,12 +59,12 @@ static inline value_t boolean(bool boolean) {
     return value;
 }
 
-/* static inline value_t string(char* string) {
+static inline value_t string(char* string) {
     value_t value;
     value.type = TYPE_STRING;
     value.as.string = string;
     return value;
-} */
+}
 
 static void run_load_const();
 static void run_load_var();
@@ -193,26 +193,6 @@ void vm_init(bytecode_t* bytecode) {
     vm.pool = compiler_get_pool();
 
     output = output_init();
-}
-
-static void vm_free() {
-    // TODO: free all the tables
-
-    if (vm.call_stack != NULL) {
-        call_stack_free(vm.call_stack);
-        free(vm.call_stack);
-        vm.call_stack = NULL;
-    }
-
-    if (vm.bytecode != NULL) {
-        vm.bytecode = NULL;
-    }
-
-    for (value_t* value = vm.stack; value < vm.stack_top; value++) {
-        if (value->type == TYPE_STRING) {
-            free(value->as.string);
-        }
-    }
 }
 
 void vm_run(bool test) {
@@ -410,8 +390,6 @@ void vm_run(bool test) {
             run_stack_clear();
             DISPATCH();
     }
-
-    vm_free();
 }
 
 static void run_load_const() {
@@ -669,13 +647,41 @@ static void run_array_get() {
     #endif
 
     value_t index_value = stack_pop_number();
-    value_t array_value = stack_pop_array();
+    value_t array_value = stack_pop();
 
     int index = (int)index_value.as.number;
-    array_t array = array_value.as.array;
 
-    value_t element_value = array_get_element(&array, index);
-    stack_push(element_value);
+    if (array_value.type == TYPE_ARRAY) {
+        array_t array = array_value.as.array;
+
+        if (index >= array.size) {
+            error_throw(ERROR_RUNTIME, "Index out of range", line());
+            return;
+        }
+
+        value_t element_value = array_get_element(&array, index);
+        stack_push(element_value);
+
+        return;
+    }
+
+    if (array_value.type == TYPE_STRING) {
+        string_t string_value = array_value.as.string;
+
+        if (index >= strlen(string_value)) {
+            error_throw(ERROR_RUNTIME, "Index out of range", line());
+            return;
+        }
+
+        char element_value = string_value[index];
+        char* string_array = (char*)malloc(sizeof(char));
+        string_array[0] = element_value;
+
+        stack_push(string(string_array));
+        return;
+    }
+
+    error_throw(ERROR_RUNTIME, "Unsupported value type in OP_ARRAY_GET", line());
 }
 
 static void run_array_set() {
@@ -787,9 +793,21 @@ static void run_sub() {
     dump_instruction("run_sub");
     #endif
 
-    value_t value1 = stack_pop_number();
-    value_t value2 = stack_pop_number();
-    stack_push(number(value2.as.number - value1.as.number));
+    value_t value1 = stack_pop();
+    value_t value2 = stack_pop();
+
+    if (value2.type == TYPE_ARRAY && value1.type == TYPE_NUMBER) {
+        array_remove(&value2.as.array, (int)value1.as.number);
+        stack_push(value2);
+        return;
+    }
+
+    if (value2.type == TYPE_NUMBER && value1.type == TYPE_NUMBER) {
+        stack_push(number(value2.as.number - value1.as.number));
+        return;
+    }
+
+    error_throw(ERROR_RUNTIME, "Unknown operands to OP_SUB", line());
 }
 
 static void run_mul() {
