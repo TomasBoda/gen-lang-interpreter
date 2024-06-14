@@ -27,11 +27,12 @@ static void emit_numeric_literal(char* raw_value, int line) {
     value.as.number = atof(raw_value);
 
     uint16_t value_index = pool_add(compiler.pool, value);
-    
     byte_t* bytes = uint16_to_bytes(value_index);
-    for (int i = 0; i < 2; i++) {
-        emit(bytes[i], line);
-    }
+
+    emit(bytes[0], line);
+    emit(bytes[1], line);
+
+    free(bytes);
 }
 
 static void emit_numeric_literal_num(double numeric_value, int line) {
@@ -42,11 +43,12 @@ static void emit_numeric_literal_num(double numeric_value, int line) {
     value.as.number = numeric_value;
 
     uint16_t value_index = pool_add(compiler.pool, value);
-    
     byte_t* bytes = uint16_to_bytes(value_index);
-    for (int i = 0; i < 2; i++) {
-        emit(bytes[i], line);
-    }
+
+    emit(bytes[0], line);
+    emit(bytes[1], line);
+
+    free(bytes);
 }
 
 static void emit_boolean_literal(char* raw_value, int line) {
@@ -57,11 +59,12 @@ static void emit_boolean_literal(char* raw_value, int line) {
     value.as.boolean = strcmp(raw_value, "true") == 0;
 
     uint16_t value_index = pool_add(compiler.pool, value);
-    
     byte_t* bytes = uint16_to_bytes(value_index);
-    for (int i = 0; i < 2; i++) {
-        emit(bytes[i], line);
-    }
+    
+    emit(bytes[0], line);
+    emit(bytes[1], line);
+
+    free(bytes);
 }
 
 static void emit_string_literal(char* raw_value, int line) {
@@ -72,11 +75,12 @@ static void emit_string_literal(char* raw_value, int line) {
     value.as.string = raw_value;
 
     uint16_t value_index = pool_add(compiler.pool, value);
-    
     byte_t* bytes = uint16_to_bytes(value_index);
-    for (int i = 0; i < 2; i++) {
-        emit(bytes[i], line);
-    }
+    
+    emit(bytes[0], line);
+    emit(bytes[1], line);
+
+    free(bytes);
 }
 
 static double get_main_func_ip() {
@@ -138,7 +142,6 @@ static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
 static void compile_access();
-static void compile_prop();
 static void compile_call_expression();
 static double compile_call_expression_args();
 static void compile_primary_expression();
@@ -146,7 +149,6 @@ static void compile_identifier();
 static void compile_numeric_literal();
 static void compile_boolean_literal();
 static void compile_string_literal();
-
 static void compile_parenthesised_expression();
 
 static void compile_logical_operator(token_t operator_token);
@@ -167,7 +169,7 @@ static token_t assert(token_type type) {
     token_t token = advance();
 
     if (token.type != type) {
-        error_throw(ERROR_COMPILER, "token assertion failed", token.line);
+        error_throw(ERROR_COMPILER, "Token assertion failed", token.line);
     }
 
     return token;
@@ -193,6 +195,7 @@ bytecode_t* compile() {
                 break;
             default:
                 error_throw(ERROR_COMPILER, "Unrecognized top level statement", peek().line);
+                return NULL;
         }
     }
 
@@ -294,7 +297,7 @@ static void compile_func_declaration_body() {
             }
             default: {
                 error_throw(ERROR_COMPILER, "Unknown statement in function body", peek().line);
-                break;
+                return;
             }
         }
     }
@@ -325,7 +328,8 @@ static void compile_object_declaration_body() {
                 break;
             }
             default: {
-                return error_throw(ERROR_RUNTIME, "Unknown statement in object declaration body", peek().line);
+                error_throw(ERROR_RUNTIME, "Unknown statement in object declaration body", peek().line);
+                return;
             }
         }
     }
@@ -361,6 +365,8 @@ static inline void update_jump_values(int source_ip, int jump_ip) {
     byte_t* bytes = uint16_to_bytes(value_index);
     compiler.bytecode->instructions[source_ip + 1] = bytes[0];
     compiler.bytecode->instructions[source_ip + 2] = bytes[1];
+
+    free(bytes);
 }
 
 static void compile_conditional_statement() {
@@ -451,8 +457,10 @@ static void compile_assignment_statement() {
         assert(TOKEN_ASSIGNMENT);
         compile_expression();
         assert(TOKEN_SEMICOLON);
+
         emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
         emit(OP_STORE_VAR, identifier.line);
+
         return;
     }
 
@@ -461,13 +469,17 @@ static void compile_assignment_statement() {
         int line = assert(TOKEN_OPEN_PAREN).line;
         emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
         emit(OP_LOAD_VAR, identifier.line);
+
         double arg_count = compile_call_expression_args();
         assert(TOKEN_CLOSE_PAREN);
+
         emit_numeric_literal_num(arg_count, line);
         emit(OP_CALL, identifier.line);
         line = assert(TOKEN_SEMICOLON).line;
+
         emit_numeric_literal_num(1, line);
         emit(OP_STACK_CLEAR, line);
+
         return;
     }
 
@@ -679,7 +691,6 @@ static void compile_multiplicative_expression() {
     }
 }
 
-// TODO: add member expressions
 static void compile_access() {
     if (DEBUG == true) printf("Compiling compile_access\n");
 
@@ -689,7 +700,10 @@ static void compile_access() {
         switch (peek().type) {
             case TOKEN_DOT: {
                 assert(TOKEN_DOT);
-                compile_prop();
+                token_t identifier = assert(TOKEN_IDENTIFIER);
+
+                emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
+                emit(OP_LOAD_PROP_CONST, identifier.line);
                 break;
             }
             case TOKEN_OPEN_BRACKET: {
@@ -704,14 +718,6 @@ static void compile_access() {
             }
         }
     }
-}
-
-static void compile_prop() {
-    if (DEBUG == true) printf("Compiling compile_prop\n");
-
-    token_t identifier = assert(TOKEN_IDENTIFIER);
-    emit_string_literal(substring(identifier.start, identifier.length), identifier.line);
-    emit(OP_LOAD_PROP_CONST, identifier.line);
 }
 
 static void compile_binary_operator(token_t operator_token) {

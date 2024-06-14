@@ -67,26 +67,21 @@ static inline value_t boolean(bool boolean) {
 } */
 
 static void run_load_const();
-
 static void run_load_var();
 static void run_store_var();
-
 static void run_func_def();
 static void run_func_end();
 static void run_return();
 static void run_call();
-
 static void run_obj_def();
 static void run_obj_end();
 static void run_new_obj();
 static void run_load_prop();
 static void run_load_prop_const();
 static void run_store_prop();
-
 static void run_array_def();
 static void run_array_get();
 static void run_array_set();
-
 static void run_jump_if_false();
 static void run_jump();
 static void run_add();

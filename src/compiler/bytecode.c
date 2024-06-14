@@ -10,8 +10,8 @@ bytecode_t* bytecode_init() {
     bytecode_t* bytecode = (bytecode_t*)malloc(sizeof(bytecode_t));
 
     if (bytecode == NULL) {
-        fprintf(stderr, "Failed to allocate memory for array.\n");
-        exit(EXIT_FAILURE);
+        error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode", 0);
+        return NULL;
     }
 
     bytecode->count = 0;
@@ -21,12 +21,14 @@ bytecode_t* bytecode_init() {
 
     if (bytecode->instructions == NULL) {
         free(bytecode);
-        error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode array", 0);
+        error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode instructions", 0);
+        return NULL;
     }
 
     if (bytecode->lines == NULL) {
         free(bytecode);
-        error_throw(ERROR_COMPILER, "Failed to allocate memory for lines array", 0);
+        error_throw(ERROR_COMPILER, "Failed to allocate memory for bytecode lines", 0);
+        return NULL;
     }
 
     return bytecode;
@@ -39,11 +41,13 @@ void bytecode_add(bytecode_t* bytecode, byte_t instruction, int line) {
         bytecode->lines = (int*)realloc(bytecode->lines, bytecode->capacity * sizeof(int));
 
         if (bytecode->instructions == NULL) {
-            error_throw(ERROR_COMPILER, "Failed to reallocate memory for bytecode array", 0);
+            error_throw(ERROR_COMPILER, "Failed to reallocate memory for bytecode", 0);
+            return;
         }
 
         if (bytecode->lines == NULL) {
-            error_throw(ERROR_COMPILER, "Failed to reallocate memory for lines array", 0);
+            error_throw(ERROR_COMPILER, "Failed to reallocate memory for bytecode", 0);
+            return;
         }
     }
 
