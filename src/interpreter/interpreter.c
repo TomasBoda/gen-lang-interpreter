@@ -29,6 +29,10 @@ const char* OP_CODE_LABELS[] = {
     "RETURN",
     "CALL",
 
+    "ENUM_DEF",
+    "STORE_ENUM",
+    "ENUM_END",
+
     "OBJ_DEF",
     "OBJ_END",
     "NEW_OBJ",
@@ -41,7 +45,7 @@ const char* OP_CODE_LABELS[] = {
     "ARRAY_GET",
     "ARRAY_SET",
 
-    "SIZE_OF",
+    "SIZEOF",
 
     "JUMP",
     "JUMP_IF_FALSE",

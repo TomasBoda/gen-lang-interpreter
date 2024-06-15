@@ -1,48 +1,10 @@
 
-object address {
-    var street;
-    var city;
-}
-
-object person {
-    var name;
-    var age;
-    var address;
-}
-
-func create_person(var name, var age, var street, var city) {
-    var person = new person;
-
-    person.name = name;
-    person.age = age;
-
-    person.address = new address;
-    person.address.street = street;
-    person.address.city = city;
-
-    return person;
+enum TokenType {
+    NUMERIC_LITERAL,
+    BOOLEAN_LITERAL,
+    STRING_LITERAL
 }
 
 func main() {
-    var p1 = create_person("John Doe", 25, "Downing Street", "London");
-
-    print p1.name;
-    print p1.age;
-    print p1.address.street;
-    print p1.address.city;
-
-    p1.name = "Marie Vogelhorn";
-    p1.address.street = "London Street";
-
-    print p1.name;
-    print p1.address.street;
-
-    var new_address = new address;
-    new_address.street = "Michalska";
-    new_address.city = "Bratislava";
-
-    p1.address = new_address;
-
-    print p1.address.street;
-    print p1.address.city;
+    print TokenType.STRING_LITERAL == 2;
 }

@@ -133,7 +133,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
     output_t* actual_output = vm_get_output();
 
     if (actual_output->count != expected_output->count) {
-        printf("\033[31mFAILED:\033[0m (%s) expected output of size %d, got %d (%d. value)\n", test_name, expected_output->count, actual_output->count);
+        printf("\033[31mFAILED:\033[0m (%s) expected output of size %d, got %d\n", test_name, expected_output->count, actual_output->count);
         return;
     }
 
@@ -176,7 +176,7 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
     }
 
     tests_passed++;
-    printf("\033[32mPASSED:\033[0m (%s)\n", test_name);
+    printf("\033[32mPASSED:\033[0m (%s), %d assertions\n", test_name, expected_output->count);
     return;
 }
 

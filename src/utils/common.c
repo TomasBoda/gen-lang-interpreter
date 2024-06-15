@@ -7,6 +7,12 @@
 
 // VALUE
 
+enum_t* enum_init() {
+    enum_t* enumeration = (enum_t*)malloc(sizeof(enum_t));
+    enumeration->values = table_init(50);
+    return enumeration;
+}
+
 array_t* array_init(int size) {
     array_t* array = (array_t*)malloc(sizeof(array_t));
     array->size = size;
@@ -125,6 +131,7 @@ void table_set(table_t* table, const char* key, value_t value) {
         exit(EXIT_FAILURE);
     }
 
+    new_entry->key = (char*)malloc(strlen(key) * sizeof(char));
     new_entry->key = strdup(key);
     new_entry->value = value;
     new_entry->next = table->buckets[index];

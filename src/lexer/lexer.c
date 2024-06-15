@@ -76,8 +76,6 @@ static token_t make_token(token_type type) {
         token.length -= 2;
     }
 
-    //printf("token type = %d token value = %s\n", token.type, substring(token.start, token.length));
-
     return token;
 }
 
@@ -125,7 +123,14 @@ static token_type identifier_type() {
             if (lexer.current - lexer.start > 1) {
                 switch (lexer.start[1]) {
                     case 'l': return check_keyword(2, 2, "se", TOKEN_ELSE);
-                    case 'n': return check_keyword(2, 2, "dl", TOKEN_ENDL);
+                    case 'n':
+                        if (lexer.current - lexer.start > 2) {
+                            switch (lexer.start[2]) {
+                                case 'd': return check_keyword(3, 1, "l", TOKEN_ENDL);
+                                case 'u': return check_keyword(3, 1, "m", TOKEN_ENUM);
+                            }
+                        }
+                        break;
                 }
             }
             break;

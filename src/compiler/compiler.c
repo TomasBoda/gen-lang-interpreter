@@ -125,6 +125,8 @@ static void compile_var_declaration();
 static void compile_func_declaration();
 static void compile_func_declaration_param_list();
 static void compile_func_declaration_body();
+static void compile_enum_declaration();
+static void compile_enum_declaration_body();
 static void compile_object_declaration();
 static void compile_object_declaration_body();
 static void compile_object_declaration_property();
@@ -141,6 +143,7 @@ static void compile_logical_expression();
 static void compile_relational_expression();
 static void compile_additive_expression();
 static void compile_multiplicative_expression();
+static void compile_sizeof_expression();
 static void compile_access();
 static void compile_call_expression();
 static double compile_call_expression_args();
@@ -189,6 +192,9 @@ bytecode_t* compile() {
                 break;
             case TOKEN_FUNC:
                 compile_func_declaration();
+                break;
+            case TOKEN_ENUM:
+                compile_enum_declaration();
                 break;
             case TOKEN_OBJECT:
                 compile_object_declaration();
@@ -299,6 +305,36 @@ static void compile_func_declaration_body() {
                 error_throw(ERROR_COMPILER, "Unknown statement in function body", peek().line);
                 return;
             }
+        }
+    }
+}
+
+static void compile_enum_declaration() {
+    if (DEBUG == true) printf("Compiling compile_enum_declaration\n");
+
+    int line = assert(TOKEN_ENUM).line;
+    token_t identifier_token = assert(TOKEN_IDENTIFIER);
+    
+    emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
+    emit(OP_ENUM_DEF, line);
+
+    assert(TOKEN_OPEN_BRACE);
+    compile_enum_declaration_body();
+    line = assert(TOKEN_CLOSE_BRACE).line;
+    emit(OP_ENUM_END, line);
+}
+
+static void compile_enum_declaration_body() {
+    if (DEBUG == true) printf("Compiling compile_enum_declaration_body\n");
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        token_t identifier_token = assert(TOKEN_IDENTIFIER);
+
+        emit_string_literal(substring(identifier_token.start, identifier_token.length), identifier_token.line);
+        emit(OP_STORE_ENUM, identifier_token.line);
+
+        if (peek().type == TOKEN_COMMA) {
+            advance();
         }
     }
 }
@@ -681,14 +717,25 @@ static void compile_additive_expression() {
 static void compile_multiplicative_expression() {
     if (DEBUG == true) printf("Compiling compile_multiplicative_expression\n");
 
-    compile_access();
+    compile_sizeof_expression();
 
     while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
         token_t operator_token = advance();
 
-        compile_access();
+        compile_sizeof_expression();
         compile_binary_operator(operator_token);
     }
+}
+
+static void compile_sizeof_expression() {
+    if (peek().type == TOKEN_SIZEOF) {
+        int line = assert(TOKEN_SIZEOF).line;
+        compile_access();
+        emit(OP_SIZEOF, line);
+        return;
+    }
+
+    compile_access();
 }
 
 static void compile_access() {

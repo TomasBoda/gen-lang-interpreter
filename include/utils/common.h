@@ -25,10 +25,13 @@ typedef struct {
     int size;
     value_t* elements;
 } array_t;
+typedef struct {
+    table_t* values;
+} enum_t;
 
 // VALUE
 
-typedef enum { TYPE_NUMBER, TYPE_BOOLEAN, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY } value_type;
+typedef enum { TYPE_NUMBER, TYPE_BOOLEAN, TYPE_STRING, TYPE_OBJECT, TYPE_ARRAY, TYPE_ENUM } value_type;
 
 struct value_t {
     value_type type;
@@ -38,8 +41,11 @@ struct value_t {
         string_t string;
         object_t object;
         array_t array;
+        enum_t enumeration;
     } as;
 };
+
+enum_t* enum_init();
 
 array_t* array_init(int size);
 void array_add_element(array_t* array, int index, value_t element);

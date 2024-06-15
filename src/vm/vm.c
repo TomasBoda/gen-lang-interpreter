@@ -71,6 +71,9 @@ static void run_load_var();
 static void run_store_var();
 static void run_func_def();
 static void run_func_end();
+static void run_enum_def();
+static void run_enum_end();
+static void run_store_enum();
 static void run_return();
 static void run_call();
 static void run_obj_def();
@@ -83,6 +86,7 @@ static void run_init_prop();
 static void run_array_def();
 static void run_array_get();
 static void run_array_set();
+static void run_sizeof();
 static void run_jump_if_false();
 static void run_jump();
 static void run_add();
@@ -211,6 +215,10 @@ void vm_run(bool test) {
         &&label_return,                 // OP_RETURN
         &&label_call,                   // OP_CALL
 
+        &&label_enum_def,               // OP_ENUM_DEF
+        &&label_store_enum,             // OP_STORE_ENUM
+        &&label_enum_end,               // OP_ENUM_END
+
         &&label_obj_def,                // OP_OBJ_DEF
         &&label_obj_end,                // OP_OBJ_END
         &&label_new_obj,                // OP_NEW_OBJ
@@ -223,7 +231,7 @@ void vm_run(bool test) {
         &&label_array_get,              // OP_ARRAY_GET
         &&label_array_set,              // OP_ARRAY_SET
 
-        &&label_not_implemented,        // OP_SIZE_OF
+        &&label_sizeof,                 // OP_SIZE_OF
 
         &&label_jump,                   // OP_JUMP
         &&label_jump_if_false,          // OP_JUMP_IF_FALSE
@@ -276,6 +284,18 @@ void vm_run(bool test) {
             run_func_end();
             DISPATCH();
 
+        label_enum_def:
+            run_enum_def();
+            DISPATCH();
+
+        label_enum_end:
+            run_enum_end();
+            DISPATCH();
+
+        label_store_enum:
+            run_store_enum();
+            DISPATCH();
+
         label_obj_def:
             run_obj_def();
             DISPATCH();
@@ -316,9 +336,13 @@ void vm_run(bool test) {
             run_array_set();
             DISPATCH();
 
+        label_sizeof:
+            run_sizeof();
+            DISPATCH();
+
         label_return:
             run_return();
-            if (!has_next()) break;
+            if (!has_next()) return;
             DISPATCH();
 
         label_call:
@@ -464,6 +488,11 @@ static void run_load_var() {
     value_t identifier = stack_pop_string();
     value_t* value = load_var(identifier.as.string);
 
+    if (value == NULL) {
+        error_throw(ERROR_RUNTIME, "Variable with the given identifier does not exist", line());
+        return;
+    }
+
     stack_push(*value);
 }
 
@@ -519,6 +548,53 @@ static void run_func_end() {
     #endif
 }
 
+static void run_enum_def() {
+    #ifdef DEBUG
+    dump_instruction("run_enum_def");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    enum_t* enumeration = enum_init();
+
+    if (current() == OP_ENUM_END) {
+        error_throw(ERROR_RUNTIME, "Cannot declare an empty enum", line());
+        return;
+    }
+
+    int index = 0;
+
+    while (current() != OP_ENUM_END) {
+        next();
+        run_load_const();
+
+        if (next() != OP_STORE_ENUM) {
+            error_throw(ERROR_RUNTIME, "OP_STORE_ENUM must follow a OP_LOAD_CONST in enum declaration", line());
+            return;
+        }
+
+        value_t enum_item = stack_pop_string();
+        table_set(enumeration->values, enum_item.as.string, number(index++));
+    }
+
+    value_t enum_value;
+    enum_value.type = TYPE_ENUM;
+    enum_value.as.enumeration = *enumeration;
+
+    table_set(vm.var_table, identifier.as.string, enum_value);
+}
+
+static void run_enum_end() {
+    #ifdef DEBUG
+    dump_instruction("run_enum_end");
+    #endif
+}
+
+static void run_store_enum() {
+    #ifdef DEBUG
+    dump_instruction("run_store_enum");
+    #endif
+}
+
 static inline void skip_obj_def() {
     while (vm.ip < vm.bytecode->count) {
         switch (current()) {
@@ -568,6 +644,11 @@ static void run_new_obj() {
     value_t identifier = stack_pop_string();
     value_t* object_ip = table_get(vm.obj_table, identifier.as.string);
 
+    if (object_ip == NULL) {
+        error_throw(ERROR_RUNTIME, "Object with the given identifier does not exist", line());
+        return;
+    }
+
     value_t object;
     object.type = TYPE_OBJECT;
     object.as.object = *object_init();
@@ -603,6 +684,37 @@ static void run_load_prop_const() {
     #endif
 
     value_t identifier = stack_pop_string();
+    value_t value = stack_pop();
+
+    switch (value.type) {
+        case TYPE_OBJECT: {
+            value_t* prop = table_get(value.as.object.properties, identifier.as.string);
+
+            if (prop == NULL) {
+                error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
+            }
+
+            stack_push(*prop);
+            break;
+        }
+        case TYPE_ENUM: {
+            value_t* item = table_get(value.as.enumeration.values, identifier.as.string);
+
+            if (item == NULL) {
+                error_throw(ERROR_RUNTIME, "Enum item with the given identifier does not exist", line());
+            }
+
+            stack_push(*item);
+
+            break;
+        }
+        default: {
+            error_throw(ERROR_RUNTIME, "Unknown datatype in OP_PROP_LOAD_CONST", line());
+            return;
+        }
+    }
+
+    /* value_t identifier = stack_pop_string();
     value_t object = stack_pop_object();
 
     value_t* prop = table_get(object.as.object.properties, identifier.as.string);
@@ -611,7 +723,7 @@ static void run_load_prop_const() {
         error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
     }
 
-    stack_push(*prop);
+    stack_push(*prop); */
 }
 
 static void run_store_prop() {
@@ -725,6 +837,29 @@ static void run_array_set() {
     array_add_element(&array_value.as.array, index, value);
 }
 
+static void run_sizeof() {
+    #ifdef DEBUG
+    dump_instruction("run_sizeof");
+    #endif
+
+    value_t value = stack_pop();
+
+    switch (value.type) {
+        case TYPE_STRING: {
+            stack_push(number((double)strlen(value.as.string)));
+            break;
+        }
+        case TYPE_ARRAY: {
+            stack_push(number((double)value.as.array.size));
+            break;
+        }
+        default: {
+            error_throw(ERROR_RUNTIME, "Unsupported datatype in sizeof", line());
+            return;
+        }
+    }
+}
+
 static void run_call() {
     #ifdef DEBUG
     dump_instruction("run_call");
@@ -758,12 +893,12 @@ static void run_return() {
     vm.ip = call_frame->ra;
     stack_push(return_value);
 
-    call_frame_free(call_frame);
-
     // exit the virtual machine
     if (call_stack_current(vm.call_stack) == NULL) {
         vm.ip = vm.bytecode->count;
     }
+
+    //call_frame_free(call_frame);
 }
 
 static void run_jump_if_false() {
@@ -810,6 +945,21 @@ static void run_add() {
 
     if (value2.type == TYPE_NUMBER && value1.type == TYPE_NUMBER) {
         stack_push(number(value2.as.number + value1.as.number));
+        return;
+    }
+
+    if (value2.type == TYPE_STRING && value1.type == TYPE_STRING) {
+        char* new_string = (char*)malloc((strlen(value2.as.string) + strlen(value1.as.string)) * sizeof(char));
+
+        for (int i = 0; i < strlen(value2.as.string); i++) {
+            new_string[i] = value2.as.string[i];
+        }
+
+        for (int i = 0; i < strlen(value1.as.string); i++) {
+            new_string[i + strlen(value2.as.string)] = value1.as.string[i];
+        }
+
+        stack_push(string(new_string));
         return;
     }
 

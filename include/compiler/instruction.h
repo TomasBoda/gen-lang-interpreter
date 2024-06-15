@@ -16,6 +16,10 @@ typedef enum {
     OP_RETURN,
     OP_CALL,
 
+    OP_ENUM_DEF,
+    OP_STORE_ENUM,
+    OP_ENUM_END,
+
     OP_OBJ_DEF,
     OP_OBJ_END,
     OP_NEW_OBJ,
@@ -28,7 +32,7 @@ typedef enum {
     OP_ARRAY_GET,
     OP_ARRAY_SET,
 
-    OP_SIZE_OF,
+    OP_SIZEOF,
 
     OP_JUMP,
     OP_JUMP_IF_FALSE,
