@@ -1161,6 +1161,7 @@ static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
 static void run_print_array(value_t* value);
 static void run_print_object(value_t* value);
+static void run_print_enum(value_t* value);
 static void run_print_any(value_t* value);
 
 static void run_print_newline() {
@@ -1203,6 +1204,10 @@ static void run_print_object(value_t* value) {
     printf("[object]: not implemented");
 }
 
+static void run_print_enum(value_t* value) {
+    printf("[enum]: not implemented");
+}
+
 static void run_print_any(value_t* value) {
     switch (value->type) {
         case TYPE_NUMBER: {
@@ -1219,6 +1224,9 @@ static void run_print_any(value_t* value) {
         }
         case TYPE_OBJECT: {
             return run_print_object(value);
+        }
+        case TYPE_ENUM: {
+            return run_print_enum(value);
         }
     }
 }
