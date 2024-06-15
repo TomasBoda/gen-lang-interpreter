@@ -1,12 +1,10 @@
-object person {
-    var name;
-}
 
 func main() {
-    var person = new person;
-    person.name = "John Doe";
+    var array = [1, 2, 3];
 
-    print person.name endl;
+    print array;
 
-    print person.name[0];
+    array = array + 4;
+
+    print array;
 }

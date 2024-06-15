@@ -18,4 +18,6 @@ output_t* output_init();
 
 void output_add(output_t* output, value_t value);
 
+void output_free(output_t* output);
+
 #endif

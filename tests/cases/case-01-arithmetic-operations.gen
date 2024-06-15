@@ -1,0 +1,20 @@
+
+func main() {
+    print 2 + 3 * 4;
+    print 2 * 3 + 4;
+    print (2 + 3) * 4;
+    print 2 * (3 + 4);
+
+    print 2 - 3 / 4;
+    print 2 / 3 - 4;
+    print (2 - 3) / 4;
+    print 2 - (3 / 4);
+
+    var a = 12.5;
+    var b = 6.2;
+
+    print a + b;
+    print a - b;
+    print a * b;
+    print a / b;
+}

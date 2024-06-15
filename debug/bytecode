@@ -1,92 +1,68 @@
 BYTECODE
 ------------------------------
-object person {
-------------------------------
-0: (line 1) LOAD_CONST
-1: (line 1) 0
-2: (line 1) 0
-3: (line 1) OBJ_DEF
-------------------------------
-var name;
-------------------------------
-4: (line 2) LOAD_CONST
-5: (line 2) 1
-6: (line 2) 0
-7: (line 2) LOAD_CONST
-8: (line 2) 2
-9: (line 2) 0
-10: (line 2) STORE_PROP
-------------------------------
-}
-------------------------------
-11: (line 3) OBJ_END
-------------------------------
 func main() {
 ------------------------------
-12: (line 5) LOAD_CONST
-13: (line 5) 3
-14: (line 5) 0
-15: (line 5) FUNC_DEF
+0: (line 2) LOAD_CONST
+1: (line 2) 0
+2: (line 2) 0
+3: (line 2) FUNC_DEF
 ------------------------------
-var person = new person;
+var array = [1, 2, 3];
 ------------------------------
-16: (line 6) LOAD_CONST
-17: (line 6) 4
-18: (line 6) 0
-19: (line 6) NEW_OBJ
-20: (line 6) LOAD_CONST
-21: (line 6) 5
-22: (line 6) 0
-23: (line 6) STORE_VAR
+4: (line 3) LOAD_CONST
+5: (line 3) 1
+6: (line 3) 0
+7: (line 3) LOAD_CONST
+8: (line 3) 2
+9: (line 3) 0
+10: (line 3) LOAD_CONST
+11: (line 3) 3
+12: (line 3) 0
+13: (line 3) LOAD_CONST
+14: (line 3) 4
+15: (line 3) 0
+16: (line 3) ARRAY_DEF
+17: (line 3) LOAD_CONST
+18: (line 3) 5
+19: (line 3) 0
+20: (line 3) STORE_VAR
 ------------------------------
-person.name = "John Doe";
+print array;
 ------------------------------
-24: (line 7) LOAD_CONST
-25: (line 7) 6
-26: (line 7) 0
-27: (line 7) LOAD_VAR
-28: (line 7) LOAD_CONST
-29: (line 7) 7
-30: (line 7) 0
-31: (line 7) LOAD_CONST
-32: (line 7) 8
-33: (line 7) 0
-34: (line 7) STORE_PROP
+21: (line 5) LOAD_CONST
+22: (line 5) 6
+23: (line 5) 0
+24: (line 5) LOAD_VAR
+25: (line 5) PRINT
 ------------------------------
-print person.name endl;
+array = array + 4;
 ------------------------------
-35: (line 9) LOAD_CONST
-36: (line 9) 9
-37: (line 9) 0
-38: (line 9) LOAD_VAR
-39: (line 9) LOAD_CONST
-40: (line 9) 10
-41: (line 9) 0
-42: (line 9) LOAD_PROP_CONST
-43: (line 9) PRINT
-44: (line 9) ENDL
+26: (line 7) LOAD_CONST
+27: (line 7) 7
+28: (line 7) 0
+29: (line 7) LOAD_VAR
+30: (line 7) LOAD_CONST
+31: (line 7) 8
+32: (line 7) 0
+33: (line 7) ADD
+34: (line 7) LOAD_CONST
+35: (line 7) 9
+36: (line 7) 0
+37: (line 7) STORE_VAR
 ------------------------------
-print person.name[0];
+print array;
 ------------------------------
-45: (line 11) LOAD_CONST
-46: (line 11) 11
-47: (line 11) 0
-48: (line 11) LOAD_VAR
-49: (line 11) LOAD_CONST
-50: (line 11) 12
-51: (line 11) 0
-52: (line 11) LOAD_PROP_CONST
-53: (line 11) LOAD_CONST
-54: (line 11) 13
-55: (line 11) 0
-56: (line 11) ARRAY_GET
-57: (line 11) PRINT
+38: (line 9) LOAD_CONST
+39: (line 9) 10
+40: (line 9) 0
+41: (line 9) LOAD_VAR
+42: (line 9) PRINT
 ------------------------------
 }
 ------------------------------
-58: (line 12) LOAD_CONST
-59: (line 12) 14
-60: (line 12) 0
-61: (line 12) RETURN
-62: (line 12) FUNC_END
+43: (line 10) LOAD_CONST
+44: (line 10) 11
+45: (line 10) 0
+46: (line 10) RETURN
+47: (line 10) FUNC_END
 ------------------------------

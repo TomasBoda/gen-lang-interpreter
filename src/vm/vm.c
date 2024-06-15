@@ -192,6 +192,7 @@ void vm_init(bytecode_t* bytecode) {
     vm.call_stack = call_stack_init();
     vm.pool = compiler_get_pool();
 
+    output_free(output);
     output = output_init();
 }
 

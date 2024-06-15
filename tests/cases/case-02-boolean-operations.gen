@@ -1,0 +1,27 @@
+
+func main() {
+    print true and true;
+    print true and false;
+    print false and true;
+    print false and false;
+
+    print true or true;
+    print true or false;
+    print false or true;
+    print false or false;
+
+    print true and (true and false);
+    print true and (true or false);
+
+    print true or (true and false);
+    print true or (true or false);
+
+    print false or (true and false);
+    print false or (true or false);
+
+    var a = true;
+    var b = false;
+
+    print a and b;
+    print a or b;
+}
