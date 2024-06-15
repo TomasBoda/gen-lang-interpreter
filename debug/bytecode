@@ -1,13 +1,13 @@
 BYTECODE
 ------------------------------
-func main() {
+object address {
 ------------------------------
 0: (line 2) LOAD_CONST
 1: (line 2) 0
 2: (line 2) 0
-3: (line 2) FUNC_DEF
+3: (line 2) OBJ_DEF
 ------------------------------
-var array = [1, 2, 3];
+var street;
 ------------------------------
 4: (line 3) LOAD_CONST
 5: (line 3) 1
@@ -15,54 +15,437 @@ var array = [1, 2, 3];
 7: (line 3) LOAD_CONST
 8: (line 3) 2
 9: (line 3) 0
-10: (line 3) LOAD_CONST
-11: (line 3) 3
-12: (line 3) 0
-13: (line 3) LOAD_CONST
-14: (line 3) 4
-15: (line 3) 0
-16: (line 3) ARRAY_DEF
-17: (line 3) LOAD_CONST
-18: (line 3) 5
-19: (line 3) 0
-20: (line 3) STORE_VAR
+10: (line 3) INIT_PROP
 ------------------------------
-print array;
+var city;
 ------------------------------
-21: (line 5) LOAD_CONST
-22: (line 5) 6
-23: (line 5) 0
-24: (line 5) LOAD_VAR
-25: (line 5) PRINT
-------------------------------
-array = array + 4;
-------------------------------
-26: (line 7) LOAD_CONST
-27: (line 7) 7
-28: (line 7) 0
-29: (line 7) LOAD_VAR
-30: (line 7) LOAD_CONST
-31: (line 7) 8
-32: (line 7) 0
-33: (line 7) ADD
-34: (line 7) LOAD_CONST
-35: (line 7) 9
-36: (line 7) 0
-37: (line 7) STORE_VAR
-------------------------------
-print array;
-------------------------------
-38: (line 9) LOAD_CONST
-39: (line 9) 10
-40: (line 9) 0
-41: (line 9) LOAD_VAR
-42: (line 9) PRINT
+11: (line 4) LOAD_CONST
+12: (line 4) 3
+13: (line 4) 0
+14: (line 4) LOAD_CONST
+15: (line 4) 4
+16: (line 4) 0
+17: (line 4) INIT_PROP
 ------------------------------
 }
 ------------------------------
-43: (line 10) LOAD_CONST
-44: (line 10) 11
-45: (line 10) 0
-46: (line 10) RETURN
-47: (line 10) FUNC_END
+18: (line 5) OBJ_END
+------------------------------
+object person {
+------------------------------
+19: (line 7) LOAD_CONST
+20: (line 7) 5
+21: (line 7) 0
+22: (line 7) OBJ_DEF
+------------------------------
+var name;
+------------------------------
+23: (line 8) LOAD_CONST
+24: (line 8) 6
+25: (line 8) 0
+26: (line 8) LOAD_CONST
+27: (line 8) 7
+28: (line 8) 0
+29: (line 8) INIT_PROP
+------------------------------
+var age;
+------------------------------
+30: (line 9) LOAD_CONST
+31: (line 9) 8
+32: (line 9) 0
+33: (line 9) LOAD_CONST
+34: (line 9) 9
+35: (line 9) 0
+36: (line 9) INIT_PROP
+------------------------------
+var address;
+------------------------------
+37: (line 10) LOAD_CONST
+38: (line 10) 10
+39: (line 10) 0
+40: (line 10) LOAD_CONST
+41: (line 10) 11
+42: (line 10) 0
+43: (line 10) INIT_PROP
+------------------------------
+}
+------------------------------
+44: (line 11) OBJ_END
+------------------------------
+func create_person(var name, var age, var street, var city) {
+------------------------------
+45: (line 13) LOAD_CONST
+46: (line 13) 12
+47: (line 13) 0
+48: (line 13) FUNC_DEF
+49: (line 13) LOAD_CONST
+50: (line 13) 13
+51: (line 13) 0
+52: (line 13) STORE_VAR
+53: (line 13) LOAD_CONST
+54: (line 13) 14
+55: (line 13) 0
+56: (line 13) STORE_VAR
+57: (line 13) LOAD_CONST
+58: (line 13) 15
+59: (line 13) 0
+60: (line 13) STORE_VAR
+61: (line 13) LOAD_CONST
+62: (line 13) 16
+63: (line 13) 0
+64: (line 13) STORE_VAR
+------------------------------
+var person = new person;
+------------------------------
+65: (line 14) LOAD_CONST
+66: (line 14) 17
+67: (line 14) 0
+68: (line 14) NEW_OBJ
+69: (line 14) LOAD_CONST
+70: (line 14) 18
+71: (line 14) 0
+72: (line 14) STORE_VAR
+------------------------------
+person.name = name;
+------------------------------
+73: (line 16) LOAD_CONST
+74: (line 16) 19
+75: (line 16) 0
+76: (line 16) LOAD_VAR
+77: (line 16) LOAD_CONST
+78: (line 16) 20
+79: (line 16) 0
+80: (line 16) LOAD_VAR
+81: (line 16) LOAD_CONST
+82: (line 16) 21
+83: (line 16) 0
+84: (line 16) STORE_PROP
+------------------------------
+person.age = age;
+------------------------------
+85: (line 17) LOAD_CONST
+86: (line 17) 22
+87: (line 17) 0
+88: (line 17) LOAD_VAR
+89: (line 17) LOAD_CONST
+90: (line 17) 23
+91: (line 17) 0
+92: (line 17) LOAD_VAR
+93: (line 17) LOAD_CONST
+94: (line 17) 24
+95: (line 17) 0
+96: (line 17) STORE_PROP
+------------------------------
+person.address = new address;
+------------------------------
+97: (line 19) LOAD_CONST
+98: (line 19) 25
+99: (line 19) 0
+100: (line 19) LOAD_VAR
+101: (line 19) LOAD_CONST
+102: (line 19) 26
+103: (line 19) 0
+104: (line 19) NEW_OBJ
+105: (line 19) LOAD_CONST
+106: (line 19) 27
+107: (line 19) 0
+108: (line 19) STORE_PROP
+------------------------------
+person.address.street = street;
+------------------------------
+109: (line 20) LOAD_CONST
+110: (line 20) 28
+111: (line 20) 0
+112: (line 20) LOAD_VAR
+113: (line 20) LOAD_CONST
+114: (line 20) 29
+115: (line 20) 0
+116: (line 20) LOAD_PROP
+117: (line 20) LOAD_CONST
+118: (line 20) 30
+119: (line 20) 0
+120: (line 20) LOAD_VAR
+121: (line 20) LOAD_CONST
+122: (line 20) 31
+123: (line 20) 0
+124: (line 20) STORE_PROP
+------------------------------
+person.address.city = city;
+------------------------------
+125: (line 21) LOAD_CONST
+126: (line 21) 32
+127: (line 21) 0
+128: (line 21) LOAD_VAR
+129: (line 21) LOAD_CONST
+130: (line 21) 33
+131: (line 21) 0
+132: (line 21) LOAD_PROP
+133: (line 21) LOAD_CONST
+134: (line 21) 34
+135: (line 21) 0
+136: (line 21) LOAD_VAR
+137: (line 21) LOAD_CONST
+138: (line 21) 35
+139: (line 21) 0
+140: (line 21) STORE_PROP
+------------------------------
+return person;
+------------------------------
+141: (line 23) LOAD_CONST
+142: (line 23) 36
+143: (line 23) 0
+144: (line 23) LOAD_VAR
+145: (line 23) RETURN
+------------------------------
+}
+------------------------------
+146: (line 24) LOAD_CONST
+147: (line 24) 37
+148: (line 24) 0
+149: (line 24) RETURN
+150: (line 24) FUNC_END
+------------------------------
+func main() {
+------------------------------
+151: (line 26) LOAD_CONST
+152: (line 26) 38
+153: (line 26) 0
+154: (line 26) FUNC_DEF
+------------------------------
+var p1 = create_person("John Doe", 25, "Downing Street", "London");
+------------------------------
+155: (line 27) LOAD_CONST
+156: (line 27) 39
+157: (line 27) 0
+158: (line 27) LOAD_VAR
+159: (line 27) LOAD_CONST
+160: (line 27) 40
+161: (line 27) 0
+162: (line 27) LOAD_CONST
+163: (line 27) 41
+164: (line 27) 0
+165: (line 27) LOAD_CONST
+166: (line 27) 42
+167: (line 27) 0
+168: (line 27) LOAD_CONST
+169: (line 27) 43
+170: (line 27) 0
+171: (line 27) LOAD_CONST
+172: (line 27) 44
+173: (line 27) 0
+174: (line 27) CALL
+175: (line 27) LOAD_CONST
+176: (line 27) 45
+177: (line 27) 0
+178: (line 27) STORE_VAR
+------------------------------
+print p1.name;
+------------------------------
+179: (line 29) LOAD_CONST
+180: (line 29) 46
+181: (line 29) 0
+182: (line 29) LOAD_VAR
+183: (line 29) LOAD_CONST
+184: (line 29) 47
+185: (line 29) 0
+186: (line 29) LOAD_PROP_CONST
+187: (line 29) PRINT
+------------------------------
+print p1.age;
+------------------------------
+188: (line 30) LOAD_CONST
+189: (line 30) 48
+190: (line 30) 0
+191: (line 30) LOAD_VAR
+192: (line 30) LOAD_CONST
+193: (line 30) 49
+194: (line 30) 0
+195: (line 30) LOAD_PROP_CONST
+196: (line 30) PRINT
+------------------------------
+print p1.address.street;
+------------------------------
+197: (line 31) LOAD_CONST
+198: (line 31) 50
+199: (line 31) 0
+200: (line 31) LOAD_VAR
+201: (line 31) LOAD_CONST
+202: (line 31) 51
+203: (line 31) 0
+204: (line 31) LOAD_PROP_CONST
+205: (line 31) LOAD_CONST
+206: (line 31) 52
+207: (line 31) 0
+208: (line 31) LOAD_PROP_CONST
+209: (line 31) PRINT
+------------------------------
+print p1.address.city;
+------------------------------
+210: (line 32) LOAD_CONST
+211: (line 32) 53
+212: (line 32) 0
+213: (line 32) LOAD_VAR
+214: (line 32) LOAD_CONST
+215: (line 32) 54
+216: (line 32) 0
+217: (line 32) LOAD_PROP_CONST
+218: (line 32) LOAD_CONST
+219: (line 32) 55
+220: (line 32) 0
+221: (line 32) LOAD_PROP_CONST
+222: (line 32) PRINT
+------------------------------
+p1.name = "Marie Vogelhorn";
+------------------------------
+223: (line 34) LOAD_CONST
+224: (line 34) 56
+225: (line 34) 0
+226: (line 34) LOAD_VAR
+227: (line 34) LOAD_CONST
+228: (line 34) 57
+229: (line 34) 0
+230: (line 34) LOAD_CONST
+231: (line 34) 58
+232: (line 34) 0
+233: (line 34) STORE_PROP
+------------------------------
+p1.address.street = "London Street";
+------------------------------
+234: (line 35) LOAD_CONST
+235: (line 35) 59
+236: (line 35) 0
+237: (line 35) LOAD_VAR
+238: (line 35) LOAD_CONST
+239: (line 35) 60
+240: (line 35) 0
+241: (line 35) LOAD_PROP
+242: (line 35) LOAD_CONST
+243: (line 35) 61
+244: (line 35) 0
+245: (line 35) LOAD_CONST
+246: (line 35) 62
+247: (line 35) 0
+248: (line 35) STORE_PROP
+------------------------------
+print p1.name;
+------------------------------
+249: (line 37) LOAD_CONST
+250: (line 37) 63
+251: (line 37) 0
+252: (line 37) LOAD_VAR
+253: (line 37) LOAD_CONST
+254: (line 37) 64
+255: (line 37) 0
+256: (line 37) LOAD_PROP_CONST
+257: (line 37) PRINT
+------------------------------
+print p1.address.street;
+------------------------------
+258: (line 38) LOAD_CONST
+259: (line 38) 65
+260: (line 38) 0
+261: (line 38) LOAD_VAR
+262: (line 38) LOAD_CONST
+263: (line 38) 66
+264: (line 38) 0
+265: (line 38) LOAD_PROP_CONST
+266: (line 38) LOAD_CONST
+267: (line 38) 67
+268: (line 38) 0
+269: (line 38) LOAD_PROP_CONST
+270: (line 38) PRINT
+------------------------------
+var new_address = new address;
+------------------------------
+271: (line 40) LOAD_CONST
+272: (line 40) 68
+273: (line 40) 0
+274: (line 40) NEW_OBJ
+275: (line 40) LOAD_CONST
+276: (line 40) 69
+277: (line 40) 0
+278: (line 40) STORE_VAR
+------------------------------
+new_address.street = "Michalska";
+------------------------------
+279: (line 41) LOAD_CONST
+280: (line 41) 70
+281: (line 41) 0
+282: (line 41) LOAD_VAR
+283: (line 41) LOAD_CONST
+284: (line 41) 71
+285: (line 41) 0
+286: (line 41) LOAD_CONST
+287: (line 41) 72
+288: (line 41) 0
+289: (line 41) STORE_PROP
+------------------------------
+new_address.city = "Bratislava";
+------------------------------
+290: (line 42) LOAD_CONST
+291: (line 42) 73
+292: (line 42) 0
+293: (line 42) LOAD_VAR
+294: (line 42) LOAD_CONST
+295: (line 42) 74
+296: (line 42) 0
+297: (line 42) LOAD_CONST
+298: (line 42) 75
+299: (line 42) 0
+300: (line 42) STORE_PROP
+------------------------------
+p1.address = new_address;
+------------------------------
+301: (line 44) LOAD_CONST
+302: (line 44) 76
+303: (line 44) 0
+304: (line 44) LOAD_VAR
+305: (line 44) LOAD_CONST
+306: (line 44) 77
+307: (line 44) 0
+308: (line 44) LOAD_VAR
+309: (line 44) LOAD_CONST
+310: (line 44) 78
+311: (line 44) 0
+312: (line 44) STORE_PROP
+------------------------------
+print p1.address.street;
+------------------------------
+313: (line 46) LOAD_CONST
+314: (line 46) 79
+315: (line 46) 0
+316: (line 46) LOAD_VAR
+317: (line 46) LOAD_CONST
+318: (line 46) 80
+319: (line 46) 0
+320: (line 46) LOAD_PROP_CONST
+321: (line 46) LOAD_CONST
+322: (line 46) 81
+323: (line 46) 0
+324: (line 46) LOAD_PROP_CONST
+325: (line 46) PRINT
+------------------------------
+print p1.address.city;
+------------------------------
+326: (line 47) LOAD_CONST
+327: (line 47) 82
+328: (line 47) 0
+329: (line 47) LOAD_VAR
+330: (line 47) LOAD_CONST
+331: (line 47) 83
+332: (line 47) 0
+333: (line 47) LOAD_PROP_CONST
+334: (line 47) LOAD_CONST
+335: (line 47) 84
+336: (line 47) 0
+337: (line 47) LOAD_PROP_CONST
+338: (line 47) PRINT
+------------------------------
+}
+------------------------------
+339: (line 48) LOAD_CONST
+340: (line 48) 85
+341: (line 48) 0
+342: (line 48) RETURN
+343: (line 48) FUNC_END
 ------------------------------

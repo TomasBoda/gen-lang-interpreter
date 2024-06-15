@@ -79,6 +79,7 @@ static void run_new_obj();
 static void run_load_prop();
 static void run_load_prop_const();
 static void run_store_prop();
+static void run_init_prop();
 static void run_array_def();
 static void run_array_get();
 static void run_array_set();
@@ -216,6 +217,7 @@ void vm_run(bool test) {
         &&label_load_prop,              // OP_LOAD_PROP
         &&label_load_prop_const,        // OP_LOAD_PROP_CONST
         &&label_store_prop,             // OP_STORE_PROP
+        &&label_init_prop,              // OP_INIT_PROP
 
         &&label_array_def,              // OP_ARRAY_DEF
         &&label_array_get,              // OP_ARRAY_GET
@@ -296,6 +298,10 @@ void vm_run(bool test) {
 
         label_store_prop:
             run_store_prop();
+            DISPATCH();
+
+        label_init_prop:
+            run_init_prop();
             DISPATCH();
 
         label_array_def:
@@ -611,6 +617,27 @@ static void run_load_prop_const() {
 static void run_store_prop() {
     #ifdef DEBUG
     dump_instruction("run_store_prop");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    value_t value = stack_pop();
+    value_t object = stack_pop_object();
+
+    object_add_property(&(object.as.object), identifier.as.string, value);
+
+    // TODO: fix storing to global variable (this currently only stores to local variable)
+    //table_set(call_stack_current(vm.call_stack)->table, identifier.as.string, object);
+
+    if (load_global_var(identifier.as.string) != NULL) {
+        table_set(vm.var_table, identifier.as.string, object);
+    } else {
+        table_set(call_stack_current(vm.call_stack)->table, identifier.as.string, object);
+    }
+}
+
+static void run_init_prop() {
+    #ifdef DEBUG
+    dump_instruction("run_init_prop");
     #endif
 
     value_t identifier = stack_pop_string();
@@ -1065,6 +1092,10 @@ static void run_endl() {
     dump_instruction("run_endl");
     #endif
 
+    if (is_testing) {
+        return;
+    }
+    
     run_print_newline();
 }
 

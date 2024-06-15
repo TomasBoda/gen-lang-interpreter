@@ -351,7 +351,7 @@ static void compile_object_declaration_property() {
     assert(TOKEN_SEMICOLON);
 
     emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
-    emit(OP_STORE_PROP, line);
+    emit(OP_INIT_PROP, line);
 }
 
 static inline void update_jump_values(int source_ip, int jump_ip) {

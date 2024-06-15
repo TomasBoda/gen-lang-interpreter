@@ -22,6 +22,7 @@ typedef enum {
     OP_LOAD_PROP,
     OP_LOAD_PROP_CONST,
     OP_STORE_PROP,
+    OP_INIT_PROP,
 
     OP_ARRAY_DEF,
     OP_ARRAY_GET,

@@ -317,6 +317,24 @@ int main() {
         test("Array operations", "./tests/cases/case-04-array-operations.gen", output);
     }
 
+    // TEST 05
+    {
+        output_t* output = output_init();
+
+        output_add(output, create_string("John Doe"));
+        output_add(output, create_number(25));
+        output_add(output, create_string("Downing Street"));
+        output_add(output, create_string("London"));
+
+        output_add(output, create_string("Marie Vogelhorn"));
+        output_add(output, create_string("London Street"));
+
+        output_add(output, create_string("Michalska"));
+        output_add(output, create_string("Bratislava"));
+
+        test("Object operations", "./tests/cases/case-05-object-operations.gen", output);
+    }
+
     printf("--------------------------\n");
 
     if (tests_passed == tests_total) {

@@ -35,6 +35,7 @@ const char* OP_CODE_LABELS[] = {
     "LOAD_PROP",
     "LOAD_PROP_CONST",
     "STORE_PROP",
+    "INIT_PROP",
 
     "ARRAY_DEF",
     "ARRAY_GET",
