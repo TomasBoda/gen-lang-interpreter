@@ -184,15 +184,26 @@ static token_t assert(token_type type) {
     return token;
 }
 
-void compiler_init() {
-    compiler.bytecode = bytecode_init();
-    compiler.current_token = lexer_get_token();
-    compiler.pool = pool_init(50);
-
-    compiler.continue_stack = stack_long_init();
+pool_t* compiler_get_pool() {
+    return compiler.pool;
 }
 
-bytecode_t* compile() {
+compiler_t* compiler_init(const char* source_code) {
+    lexer_init(source_code);
+
+    compiler_t* compiler_instance = (compiler_t*)malloc(sizeof(compiler_t));
+
+    compiler_instance->bytecode = bytecode_init();
+    compiler_instance->current_token = lexer_get_token();
+    compiler_instance->pool = pool_init(50);
+    compiler_instance->continue_stack = stack_long_init();
+
+    return compiler_instance;
+}
+
+bytecode_t* compile(compiler_t* compiler_instance) {
+    compiler = *compiler_instance;
+
     while (peek().type != TOKEN_EOF) {
         switch (peek().type) {
             case TOKEN_VAR:
@@ -216,10 +227,6 @@ bytecode_t* compile() {
 
     emit_main_func_call();
     return compiler.bytecode;
-}
-
-pool_t* compiler_get_pool() {
-    return compiler.pool;
 }
 
 static void compile_var_declaration() {

@@ -8,6 +8,8 @@
 typedef enum {
     TOKEN_VAR, TOKEN_FUNC, TOKEN_OBJECT, TOKEN_ENUM,
 
+    TOKEN_USE,
+
     TOKEN_IF, TOKEN_ELSE,
     TOKEN_AND, TOKEN_OR,
 

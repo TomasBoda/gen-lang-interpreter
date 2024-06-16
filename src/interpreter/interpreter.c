@@ -119,16 +119,14 @@ char* get_line(const char* str, int i) {
     return NULL;
 }
 
-void interpreter_init(const char* source_code) {
-    lexer_init(source_code);
-    compiler_init();
+void interpret(const char* source_code) {
     loaded_source_code = source_code;
-}
 
-void interpret() {
     printf("\033[32mINFO:\033[0m Starting GEN v%s\n", VERSION);
 
-    bytecode_t* bytecode = compile();
+    compiler_t* compiler = compiler_init(source_code);
+    bytecode_t* bytecode = compile(compiler);
+
     printf("\033[32mINFO:\033[0m Compiled successfully\n");
     printf("------------------------------\n");
 

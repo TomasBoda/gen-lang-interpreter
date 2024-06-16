@@ -1,4 +1,31 @@
 
+func fibonacci(var n) {
+    var i = 0;
+
+    while (i < n) {
+        var index = i + 1;
+        var value = fibonacci_recursive(i);
+
+        fibonacci_print(index, value);
+        i = i + 1;
+    }
+}
+
+func fibonacci_recursive(var number) {
+    if (number <= 1) {
+        return number;
+    }
+
+    return fibonacci_recursive(number - 1) + fibonacci_recursive(number - 2);
+}
+
+func fibonacci_print(var index, var value) {
+    print index;
+    print ": ";
+    print value endl;
+}
+
 func main() {
-    print "Hello from GEN!";
+    var n = 30;
+    fibonacci(n);
 }

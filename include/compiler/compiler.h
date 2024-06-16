@@ -17,7 +17,6 @@ typedef struct {
     bytecode_t* bytecode;
     token_t current_token;
     pool_t* pool;
-
     stack_long_t* continue_stack;
 } compiler_t;
 
@@ -25,14 +24,14 @@ typedef struct {
  * @brief Initializes the compiler
  * 
  */
-void compiler_init();
+compiler_t* compiler_init(const char* source_code);
 
 /**
  * @brief Compiles the source code into an array of instructions (bytecode)
  * 
  * @return bytecode_t* array of instructions (bytecode)
  */
-bytecode_t* compile();
+bytecode_t* compile(compiler_t* compiler_instance);
 
 /**
  * @brief Retrieves the constant pool generated at compile time
