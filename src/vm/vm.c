@@ -111,6 +111,8 @@ static void run_not_implemented() {
     error_throw(ERROR_RUNTIME, "Unrecognized instruction", line());
 }
 
+// STACK
+
 static inline void stack_push(value_t value) {
     if (vm.stack_top == vm.stack + 256) {
         error_throw(ERROR_RUNTIME, "Stack overflow (max capacity = 256)", line());
@@ -184,6 +186,8 @@ static inline value_t stack_pop_array() {
 
     return value;
 }
+
+// VIRTUAL MACHINE
 
 void vm_init(bytecode_t* bytecode) {
     vm.bytecode = bytecode;
@@ -423,6 +427,8 @@ void vm_run(bool test) {
     }
 }
 
+// INSTRUCTIONS
+
 static void run_load_const() {
     #ifdef DEBUG
     dump_instruction("run_load_const");
@@ -434,6 +440,11 @@ static void run_load_const() {
 
     uint16_t pool_index = bytes_to_uint16(bytes);
     value_t* value = pool_get(vm.pool, pool_index);
+
+    if (value == NULL) {
+        error_throw(ERROR_RUNTIME, "Could not fetch constant from the constant pool", line());
+        return;
+    }
 
     stack_push(*value);
 }
@@ -580,6 +591,7 @@ static void run_enum_def() {
     enum_value.type = TYPE_ENUM;
     enum_value.as.enumeration = *enumeration;
 
+    // TODO: maybe store enum values to different table? or store them as objects?
     table_set(vm.var_table, identifier.as.string, enum_value);
 }
 
@@ -632,6 +644,12 @@ static void run_obj_end() {
     #endif
 
     call_frame_t* call_frame = call_stack_pop(vm.call_stack);
+
+    if (call_frame == NULL) {
+        error_throw(ERROR_RUNTIME, "Cannot pop call frame from the call stack because it is empty", line());
+        return;
+    }
+
     vm.ip = call_frame->ra;
     call_frame_free(call_frame);
 }
@@ -668,14 +686,14 @@ static void run_load_prop() {
     value_t identifier = stack_pop_string();
     value_t object = stack_pop_object();
 
-    value_t* prop = table_get(object.as.object.properties, identifier.as.string);
+    value_t* property = table_get(object.as.object.properties, identifier.as.string);
 
-    if (prop == NULL) {
+    if (property == NULL) {
         error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
     }
 
     stack_push(object);
-    stack_push(*prop);
+    stack_push(*property);
 }
 
 static void run_load_prop_const() {
@@ -705,7 +723,6 @@ static void run_load_prop_const() {
             }
 
             stack_push(*item);
-
             break;
         }
         default: {
@@ -713,17 +730,6 @@ static void run_load_prop_const() {
             return;
         }
     }
-
-    /* value_t identifier = stack_pop_string();
-    value_t object = stack_pop_object();
-
-    value_t* prop = table_get(object.as.object.properties, identifier.as.string);
-
-    if (prop == NULL) {
-        error_throw(ERROR_RUNTIME, "Object property with the given identifier does not exist", line());
-    }
-
-    stack_push(*prop); */
 }
 
 static void run_store_prop() {
@@ -890,6 +896,11 @@ static void run_return() {
     value_t return_value = stack_pop();
     call_frame_t* call_frame = call_stack_pop(vm.call_stack);
 
+    if (call_frame == NULL) {
+        error_throw(ERROR_RUNTIME, "Cannot pop call frame from the call stack because it is empty", line());
+        return;
+    }
+
     vm.ip = call_frame->ra;
     stack_push(return_value);
 
@@ -929,10 +940,6 @@ static void run_add() {
     #ifdef DEBUG
     dump_instruction("run_add");
     #endif
-
-    /* value_t value1 = stack_pop_number();
-    value_t value2 = stack_pop_number();
-    stack_push(number(value2.as.number + value1.as.number)); */
 
     value_t value1 = stack_pop();
     value_t value2 = stack_pop();

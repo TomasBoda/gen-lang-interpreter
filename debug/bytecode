@@ -1,59 +1,56 @@
 BYTECODE
 ------------------------------
-func fibonacci(var n) {
+func main() {
 ------------------------------
-0: (line 1) LOAD_CONST
-1: (line 1) 0
-2: (line 1) 0
-3: (line 1) FUNC_DEF
-4: (line 1) LOAD_CONST
-5: (line 1) 1
-6: (line 1) 0
-7: (line 1) STORE_VAR
+0: (line 2) LOAD_CONST
+1: (line 2) 0
+2: (line 2) 0
+3: (line 2) FUNC_DEF
 ------------------------------
 var i = 0;
 ------------------------------
-8: (line 2) LOAD_CONST
-9: (line 2) 2
-10: (line 2) 0
-11: (line 2) LOAD_CONST
-12: (line 2) 3
-13: (line 2) 0
-14: (line 2) STORE_VAR
+4: (line 3) LOAD_CONST
+5: (line 3) 1
+6: (line 3) 0
+7: (line 3) LOAD_CONST
+8: (line 3) 2
+9: (line 3) 0
+10: (line 3) STORE_VAR
 ------------------------------
-while (i < n) {
+while (i < 10) {
 ------------------------------
-15: (line 4) LOAD_CONST
-16: (line 4) 4
-17: (line 4) 0
-18: (line 4) LOAD_VAR
-19: (line 4) LOAD_CONST
-20: (line 4) 5
-21: (line 4) 0
-22: (line 4) LOAD_VAR
-23: (line 4) CMP_LT
-24: (line 4) LOAD_CONST
-25: (line 4) 23
-26: (line 4) 0
-27: (line 4) JUMP_IF_FALSE
+11: (line 5) LOAD_CONST
+12: (line 5) 3
+13: (line 5) 0
+14: (line 5) LOAD_VAR
+15: (line 5) LOAD_CONST
+16: (line 5) 4
+17: (line 5) 0
+18: (line 5) CMP_LT
+19: (line 5) LOAD_CONST
+20: (line 5) 27
+21: (line 5) 0
+22: (line 5) JUMP_IF_FALSE
 ------------------------------
-var index = i + 1;
+if (i == 1 or i == 3 or i == 5 or i == 7 or i == 9) {
 ------------------------------
-28: (line 5) LOAD_CONST
-29: (line 5) 7
-30: (line 5) 0
-31: (line 5) LOAD_VAR
-32: (line 5) LOAD_CONST
-33: (line 5) 8
-34: (line 5) 0
-35: (line 5) ADD
-36: (line 5) LOAD_CONST
-37: (line 5) 9
-38: (line 5) 0
-39: (line 5) STORE_VAR
-------------------------------
-var value = fibonacci_recursive(i);
-------------------------------
+23: (line 6) LOAD_CONST
+24: (line 6) 6
+25: (line 6) 0
+26: (line 6) LOAD_VAR
+27: (line 6) LOAD_CONST
+28: (line 6) 7
+29: (line 6) 0
+30: (line 6) CMP_EQ
+31: (line 6) LOAD_CONST
+32: (line 6) 8
+33: (line 6) 0
+34: (line 6) LOAD_VAR
+35: (line 6) LOAD_CONST
+36: (line 6) 9
+37: (line 6) 0
+38: (line 6) CMP_EQ
+39: (line 6) OR
 40: (line 6) LOAD_CONST
 41: (line 6) 10
 42: (line 6) 0
@@ -61,236 +58,89 @@ var value = fibonacci_recursive(i);
 44: (line 6) LOAD_CONST
 45: (line 6) 11
 46: (line 6) 0
-47: (line 6) LOAD_VAR
-48: (line 6) LOAD_CONST
-49: (line 6) 12
-50: (line 6) 0
-51: (line 6) CALL
-52: (line 6) LOAD_CONST
-53: (line 6) 13
-54: (line 6) 0
-55: (line 6) STORE_VAR
-------------------------------
-fibonacci_print(index, value);
-------------------------------
-56: (line 8) LOAD_CONST
-57: (line 8) 14
-58: (line 8) 0
-59: (line 8) LOAD_VAR
-60: (line 8) LOAD_CONST
-61: (line 8) 15
-62: (line 8) 0
-63: (line 8) LOAD_VAR
-64: (line 8) LOAD_CONST
-65: (line 8) 16
-66: (line 8) 0
-67: (line 8) LOAD_VAR
-68: (line 8) LOAD_CONST
-69: (line 8) 17
-70: (line 8) 0
-71: (line 8) CALL
-72: (line 8) LOAD_CONST
-73: (line 8) 18
-74: (line 8) 0
-75: (line 8) STACK_CLEAR
+47: (line 6) CMP_EQ
+48: (line 6) OR
+49: (line 6) LOAD_CONST
+50: (line 6) 12
+51: (line 6) 0
+52: (line 6) LOAD_VAR
+53: (line 6) LOAD_CONST
+54: (line 6) 13
+55: (line 6) 0
+56: (line 6) CMP_EQ
+57: (line 6) OR
+58: (line 6) LOAD_CONST
+59: (line 6) 14
+60: (line 6) 0
+61: (line 6) LOAD_VAR
+62: (line 6) LOAD_CONST
+63: (line 6) 15
+64: (line 6) 0
+65: (line 6) CMP_EQ
+66: (line 6) OR
+67: (line 6) LOAD_CONST
+68: (line 6) 21
+69: (line 6) 0
+70: (line 6) JUMP_IF_FALSE
 ------------------------------
 i = i + 1;
 ------------------------------
-76: (line 9) LOAD_CONST
-77: (line 9) 19
-78: (line 9) 0
-79: (line 9) LOAD_VAR
-80: (line 9) LOAD_CONST
-81: (line 9) 20
-82: (line 9) 0
-83: (line 9) ADD
-84: (line 9) LOAD_CONST
-85: (line 9) 21
-86: (line 9) 0
-87: (line 9) STORE_VAR
+71: (line 7) LOAD_CONST
+72: (line 7) 17
+73: (line 7) 0
+74: (line 7) LOAD_VAR
+75: (line 7) LOAD_CONST
+76: (line 7) 18
+77: (line 7) 0
+78: (line 7) ADD
+79: (line 7) LOAD_CONST
+80: (line 7) 19
+81: (line 7) 0
+82: (line 7) STORE_VAR
+------------------------------
+continue;
+------------------------------
+83: (line 8) LOAD_CONST
+84: (line 8) 20
+85: (line 8) 0
+86: (line 8) JUMP
+------------------------------
+print i endl;
+------------------------------
+87: (line 11) LOAD_CONST
+88: (line 11) 22
+89: (line 11) 0
+90: (line 11) LOAD_VAR
+91: (line 11) PRINT
+92: (line 11) ENDL
+------------------------------
+i = i + 1;
+------------------------------
+93: (line 12) LOAD_CONST
+94: (line 12) 23
+95: (line 12) 0
+96: (line 12) LOAD_VAR
+97: (line 12) LOAD_CONST
+98: (line 12) 24
+99: (line 12) 0
+100: (line 12) ADD
+101: (line 12) LOAD_CONST
+102: (line 12) 25
+103: (line 12) 0
+104: (line 12) STORE_VAR
 ------------------------------
 }
 ------------------------------
-88: (line 10) LOAD_CONST
-89: (line 10) 22
-90: (line 10) 0
-91: (line 10) JUMP
+105: (line 13) LOAD_CONST
+106: (line 13) 26
+107: (line 13) 0
+108: (line 13) JUMP
 ------------------------------
 }
 ------------------------------
-92: (line 11) LOAD_CONST
-93: (line 11) 24
-94: (line 11) 0
-95: (line 11) RETURN
-96: (line 11) FUNC_END
-------------------------------
-func fibonacci_recursive(var number) {
-------------------------------
-97: (line 13) LOAD_CONST
-98: (line 13) 25
-99: (line 13) 0
-100: (line 13) FUNC_DEF
-101: (line 13) LOAD_CONST
-102: (line 13) 26
-103: (line 13) 0
-104: (line 13) STORE_VAR
-------------------------------
-if (number <= 1) {
-------------------------------
-105: (line 14) LOAD_CONST
-106: (line 14) 27
-107: (line 14) 0
-108: (line 14) LOAD_VAR
 109: (line 14) LOAD_CONST
 110: (line 14) 28
 111: (line 14) 0
-112: (line 14) CMP_LE
-113: (line 14) LOAD_CONST
-114: (line 14) 31
-115: (line 14) 0
-116: (line 14) JUMP_IF_FALSE
-------------------------------
-return number;
-------------------------------
-117: (line 15) LOAD_CONST
-118: (line 15) 30
-119: (line 15) 0
-120: (line 15) LOAD_VAR
-121: (line 15) RETURN
-------------------------------
-return fibonacci_recursive(number - 1) + fibonacci_recursive(number - 2);
-------------------------------
-122: (line 18) LOAD_CONST
-123: (line 18) 32
-124: (line 18) 0
-125: (line 18) LOAD_VAR
-126: (line 18) LOAD_CONST
-127: (line 18) 33
-128: (line 18) 0
-129: (line 18) LOAD_VAR
-130: (line 18) LOAD_CONST
-131: (line 18) 34
-132: (line 18) 0
-133: (line 18) SUB
-134: (line 18) LOAD_CONST
-135: (line 18) 35
-136: (line 18) 0
-137: (line 18) CALL
-138: (line 18) LOAD_CONST
-139: (line 18) 36
-140: (line 18) 0
-141: (line 18) LOAD_VAR
-142: (line 18) LOAD_CONST
-143: (line 18) 37
-144: (line 18) 0
-145: (line 18) LOAD_VAR
-146: (line 18) LOAD_CONST
-147: (line 18) 38
-148: (line 18) 0
-149: (line 18) SUB
-150: (line 18) LOAD_CONST
-151: (line 18) 39
-152: (line 18) 0
-153: (line 18) CALL
-154: (line 18) ADD
-155: (line 18) RETURN
-------------------------------
-}
-------------------------------
-156: (line 19) LOAD_CONST
-157: (line 19) 40
-158: (line 19) 0
-159: (line 19) RETURN
-160: (line 19) FUNC_END
-------------------------------
-func fibonacci_print(var index, var value) {
-------------------------------
-161: (line 21) LOAD_CONST
-162: (line 21) 41
-163: (line 21) 0
-164: (line 21) FUNC_DEF
-165: (line 21) LOAD_CONST
-166: (line 21) 42
-167: (line 21) 0
-168: (line 21) STORE_VAR
-169: (line 21) LOAD_CONST
-170: (line 21) 43
-171: (line 21) 0
-172: (line 21) STORE_VAR
-------------------------------
-print index;
-------------------------------
-173: (line 22) LOAD_CONST
-174: (line 22) 44
-175: (line 22) 0
-176: (line 22) LOAD_VAR
-177: (line 22) PRINT
-------------------------------
-print ": ";
-------------------------------
-178: (line 23) LOAD_CONST
-179: (line 23) 45
-180: (line 23) 0
-181: (line 23) PRINT
-------------------------------
-print value endl;
-------------------------------
-182: (line 24) LOAD_CONST
-183: (line 24) 46
-184: (line 24) 0
-185: (line 24) LOAD_VAR
-186: (line 24) PRINT
-187: (line 24) ENDL
-------------------------------
-}
-------------------------------
-188: (line 25) LOAD_CONST
-189: (line 25) 47
-190: (line 25) 0
-191: (line 25) RETURN
-192: (line 25) FUNC_END
-------------------------------
-func main() {
-------------------------------
-193: (line 27) LOAD_CONST
-194: (line 27) 48
-195: (line 27) 0
-196: (line 27) FUNC_DEF
-------------------------------
-var n = 30;
-------------------------------
-197: (line 28) LOAD_CONST
-198: (line 28) 49
-199: (line 28) 0
-200: (line 28) LOAD_CONST
-201: (line 28) 50
-202: (line 28) 0
-203: (line 28) STORE_VAR
-------------------------------
-fibonacci(n);
-------------------------------
-204: (line 29) LOAD_CONST
-205: (line 29) 51
-206: (line 29) 0
-207: (line 29) LOAD_VAR
-208: (line 29) LOAD_CONST
-209: (line 29) 52
-210: (line 29) 0
-211: (line 29) LOAD_VAR
-212: (line 29) LOAD_CONST
-213: (line 29) 53
-214: (line 29) 0
-215: (line 29) CALL
-216: (line 29) LOAD_CONST
-217: (line 29) 54
-218: (line 29) 0
-219: (line 29) STACK_CLEAR
-------------------------------
-}
-------------------------------
-220: (line 30) LOAD_CONST
-221: (line 30) 55
-222: (line 30) 0
-223: (line 30) RETURN
-224: (line 30) FUNC_END
+112: (line 14) RETURN
+113: (line 14) FUNC_END
 ------------------------------

@@ -8,6 +8,7 @@
 #include "compiler/bytecode.h"
 #include "compiler/compiler.h"
 #include "compiler/instruction.h"
+#include "compiler/stack.h"
 #include "utils/error.h"
 #include "utils/common.h"
 
@@ -132,7 +133,10 @@ static void compile_object_declaration_body();
 static void compile_object_declaration_property();
 static void compile_array_instantiation_expression();
 static void compile_conditional_statement();
+static void compile_conditional_statement_body();
 static void compile_while_statement();
+static void compile_while_statement_body();
+static void compile_continue_statement();
 static void compile_assignment_statement();
 static void compile_return();
 static void compile_print();
@@ -182,6 +186,8 @@ void compiler_init() {
     compiler.bytecode = bytecode_init();
     compiler.current_token = lexer_get_token();
     compiler.pool = pool_init(50);
+
+    compiler.continue_stack = stack_long_init();
 }
 
 bytecode_t* compile() {
@@ -420,9 +426,7 @@ static void compile_conditional_statement() {
     assert(TOKEN_CLOSE_PAREN);
     assert(TOKEN_OPEN_BRACE);
 
-    while (peek().type != TOKEN_CLOSE_BRACE) {
-        compile_func_declaration_body();
-    }
+    compile_conditional_statement_body();
 
     line = assert(TOKEN_CLOSE_BRACE).line;
 
@@ -443,14 +447,54 @@ static void compile_conditional_statement() {
     assert(TOKEN_ELSE);
     assert(TOKEN_OPEN_BRACE);
 
-    while (peek().type != TOKEN_CLOSE_BRACE) {
-        compile_func_declaration_body();
-    }
+    compile_conditional_statement_body();
 
     assert(TOKEN_CLOSE_BRACE);
 
     int ip5 = compiler.bytecode->count;
     update_jump_values(ip3, ip5);
+}
+
+static void compile_conditional_statement_body() {
+    if (DEBUG == true) printf("Compiling compile_conditional_statement_body\n");
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        switch (peek().type) {
+            case TOKEN_VAR: {
+                compile_var_declaration();
+                break;
+            }
+            case TOKEN_IF: {
+                compile_conditional_statement();
+                break;
+            }
+            case TOKEN_WHILE: {
+                compile_while_statement();
+                break;
+            }
+            case TOKEN_PRINT: {
+                compile_print();
+                break;
+            }
+            case TOKEN_RETURN: {
+                compile_return();
+                break;
+            }
+            case TOKEN_IDENTIFIER: {
+                compile_assignment_statement();
+                break;
+            }
+            case TOKEN_CONTINUE: {
+                printf("HERE\n");
+                compile_continue_statement();
+                break;
+            }
+            default: {
+                error_throw(ERROR_COMPILER, "Unknown statement in conditional body", peek().line);
+                return;
+            }
+        }
+    }
 }
 
 static void compile_while_statement() {
@@ -460,6 +504,7 @@ static void compile_while_statement() {
     assert(TOKEN_OPEN_PAREN);
 
     int ip1 = compiler.bytecode->count;
+    stack_long_push(compiler.continue_stack, ip1);
 
     compile_expression();
 
@@ -472,9 +517,8 @@ static void compile_while_statement() {
     assert(TOKEN_CLOSE_PAREN);
     assert(TOKEN_OPEN_BRACE);
 
-    while (peek().type != TOKEN_CLOSE_BRACE) {
-        compile_func_declaration_body();
-    }
+    // TODO: here
+    compile_while_statement_body();
 
     line = assert(TOKEN_CLOSE_BRACE).line;
 
@@ -483,6 +527,62 @@ static void compile_while_statement() {
 
     int ip3 = compiler.bytecode->count;
     update_jump_values(ip2, ip3);
+
+    stack_long_pop(compiler.continue_stack);
+}
+
+static void compile_while_statement_body() {
+    if (DEBUG == true) printf("Compiling compile_while_statement_body\n");
+
+    while (peek().type != TOKEN_CLOSE_BRACE) {
+        switch (peek().type) {
+            case TOKEN_VAR: {
+                compile_var_declaration();
+                break;
+            }
+            case TOKEN_IF: {
+                compile_conditional_statement();
+                break;
+            }
+            case TOKEN_WHILE: {
+                compile_while_statement();
+                break;
+            }
+            case TOKEN_PRINT: {
+                compile_print();
+                break;
+            }
+            case TOKEN_RETURN: {
+                compile_return();
+                break;
+            }
+            case TOKEN_IDENTIFIER: {
+                compile_assignment_statement();
+                break;
+            }
+            case TOKEN_CONTINUE: {
+                printf("HERE\n");
+                compile_continue_statement();
+                break;
+            }
+            default: {
+                error_throw(ERROR_COMPILER, "Unknown statement in while body", peek().line);
+                return;
+            }
+        }
+    }
+}
+
+static void compile_continue_statement() {
+    if (DEBUG == true) printf("Compiling compile_continue_statement\n");
+
+    int line = assert(TOKEN_CONTINUE).line;
+
+    long jump_ip = stack_long_peek(compiler.continue_stack);
+    emit_numeric_literal_num((double)jump_ip, line);
+    emit(OP_JUMP, line);
+
+    assert(TOKEN_SEMICOLON);
 }
 
 static void compile_assignment_statement() {

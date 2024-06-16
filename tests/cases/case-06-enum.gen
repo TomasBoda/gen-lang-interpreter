@@ -1,0 +1,16 @@
+
+enum jobs {
+    doctor,
+    lawyer,
+    pilot,
+    engineer
+};
+
+object person {
+    var name;
+    var job;
+}
+
+func main() {
+    var person = new person;
+}

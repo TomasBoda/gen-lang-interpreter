@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "compiler/bytecode.h"
+#include "compiler/stack.h"
 #include "lexer/token.h"
 #include "vm/pool.h"
 
@@ -16,6 +17,8 @@ typedef struct {
     bytecode_t* bytecode;
     token_t current_token;
     pool_t* pool;
+
+    stack_long_t* continue_stack;
 } compiler_t;
 
 /**
