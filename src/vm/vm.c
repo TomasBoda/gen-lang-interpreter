@@ -93,6 +93,7 @@ static void run_add();
 static void run_sub();
 static void run_mul();
 static void run_div();
+static void run_neg();
 static void run_cmp_eq();
 static void run_cmp_ne();
 static void run_cmp_gt();
@@ -245,7 +246,7 @@ void vm_run(bool test) {
         &&label_mul,                    // OP_MUL
         &&label_div,                    // OP_DIV
         &&label_not_implemented,        // OP_DIV_FLOOR
-        &&label_not_implemented,        // OP_NEG
+        &&label_neg,                    // OP_NEG
 
         &&label_cmp_eq,                 // OP_CMP_EQ
         &&label_cmp_ne,                 // OP_CMP_NE
@@ -379,6 +380,10 @@ void vm_run(bool test) {
 
         label_div:
             run_div();
+            DISPATCH();
+
+        label_neg:
+            run_neg();
             DISPATCH();
 
         label_cmp_eq:
@@ -1018,6 +1023,29 @@ static void run_div() {
     }
 
     stack_push(number(value2.as.number / value1.as.number));
+}
+
+static void run_neg() {
+    #ifdef DEBUG
+    dump_instruction("run_neg");
+    #endif
+
+    value_t value = stack_pop();
+
+    switch (value.type) {
+        case TYPE_NUMBER: {
+            stack_push(number(-value.as.number));
+            break;
+        }
+        case TYPE_BOOLEAN: {
+            stack_push(boolean(!value.as.boolean));
+            break;
+        }
+        default: {
+            error_throw(ERROR_RUNTIME, "Invalid datatype in negation", line());
+            return;
+        }
+    }
 }
 
 static void run_cmp_eq() {

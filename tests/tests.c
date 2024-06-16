@@ -335,6 +335,137 @@ int main() {
         test("Object operations", "./tests/cases/case-05-object-operations.gen", output);
     }
 
+    // TEST 06
+    {
+        output_t* output = output_init();
+
+        output_add(output, create_number(0));
+        output_add(output, create_number(2));
+        output_add(output, create_number(3));
+        output_add(output, create_number(1));
+
+        test("Enums", "./tests/cases/case-06-enums.gen", output);
+    }
+
+    // TEST 07
+    {
+        output_t* output = output_init();
+
+        output_add(output, create_number(1));
+        output_add(output, create_number(2));
+        output_add(output, create_number(3));
+        output_add(output, create_number(4));
+
+        test("If statements", "./tests/cases/case-07-if-statements.gen", output);
+    }
+
+    // TEST 08
+    {
+        output_t* output = output_init();
+
+        {
+            int i = 1;
+            while (i <= 10) {
+                output_add(output, create_number((double)i));
+                if (i == 5) {
+                    break;
+                }
+                i++;
+            }
+        }
+
+        {
+            int i = 1;
+            while (i <= 10) {
+                if (i == 5) {
+                    i++;
+                    continue;
+                }
+                output_add(output, create_number((double)i));
+                i++;
+            }
+        }
+
+        {
+            int i = 1;
+            while (i <= 10) {
+                if (i == 5) {
+                    i++;
+                    continue;
+                }
+                if (i == 8) {
+                    break;
+                }
+                output_add(output, create_number((double)i));
+                i++;
+            }
+        }
+
+        {
+            int i = 1;
+            int j;
+
+            while (i <= 3) {
+                j = 1;
+                while (j <= 3) {
+                    output_add(output, create_number((double)i));
+                    output_add(output, create_number((double)j));
+                    if (j == 2) {
+                        break;
+                    }
+                    j++;
+                }
+                i++;
+            }
+        }
+
+        {
+            int i = 1;
+            int j;
+
+            while (i <= 3) {
+                j = 1;
+                while (j <= 3) {
+                    if (j == 2) {
+                        j++;
+                        continue;
+                    }
+                    output_add(output, create_number((double)i));
+                    output_add(output, create_number((double)j));
+                    j++;
+                }
+                i++;
+            }
+        }
+
+        {
+            int i = 1;
+            int j;
+
+            while (i <= 3) {
+                j = 1;
+                while (j <= 3) {
+                    if (j == 2) {
+                        j++;
+                        continue;
+                    }
+                    if (i == 3 && j == 3) {
+                        break;
+                    }
+                    output_add(output, create_number((double)i));
+                    output_add(output, create_number((double)j));
+                    j++;
+                }
+                if (i == 3) {
+                    break;
+                }
+                i++;
+            }
+        }
+
+        test("While statements", "./tests/cases/case-08-while-statements.gen", output);
+    }
+
     printf("--------------------------\n");
 
     if (tests_passed == tests_total) {

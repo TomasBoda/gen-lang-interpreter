@@ -7,7 +7,7 @@ func main() {
 2: (line 2) 0
 3: (line 2) FUNC_DEF
 ------------------------------
-var i = 0;
+var a = 10;
 ------------------------------
 4: (line 3) LOAD_CONST
 5: (line 3) 1
@@ -17,130 +17,45 @@ var i = 0;
 9: (line 3) 0
 10: (line 3) STORE_VAR
 ------------------------------
-while (i < 10) {
+print !true;
 ------------------------------
 11: (line 5) LOAD_CONST
 12: (line 5) 3
 13: (line 5) 0
-14: (line 5) LOAD_VAR
-15: (line 5) LOAD_CONST
-16: (line 5) 4
-17: (line 5) 0
-18: (line 5) CMP_LT
-19: (line 5) LOAD_CONST
-20: (line 5) 27
-21: (line 5) 0
-22: (line 5) JUMP_IF_FALSE
+14: (line 5) NEG
+15: (line 5) PRINT
 ------------------------------
-if (i == 1 or i == 3 or i == 5 or i == 7 or i == 9) {
+print !false;
 ------------------------------
-23: (line 6) LOAD_CONST
-24: (line 6) 6
-25: (line 6) 0
-26: (line 6) LOAD_VAR
-27: (line 6) LOAD_CONST
-28: (line 6) 7
-29: (line 6) 0
-30: (line 6) CMP_EQ
-31: (line 6) LOAD_CONST
-32: (line 6) 8
-33: (line 6) 0
-34: (line 6) LOAD_VAR
-35: (line 6) LOAD_CONST
-36: (line 6) 9
-37: (line 6) 0
-38: (line 6) CMP_EQ
-39: (line 6) OR
-40: (line 6) LOAD_CONST
-41: (line 6) 10
-42: (line 6) 0
-43: (line 6) LOAD_VAR
-44: (line 6) LOAD_CONST
-45: (line 6) 11
-46: (line 6) 0
-47: (line 6) CMP_EQ
-48: (line 6) OR
-49: (line 6) LOAD_CONST
-50: (line 6) 12
-51: (line 6) 0
-52: (line 6) LOAD_VAR
-53: (line 6) LOAD_CONST
-54: (line 6) 13
-55: (line 6) 0
-56: (line 6) CMP_EQ
-57: (line 6) OR
-58: (line 6) LOAD_CONST
-59: (line 6) 14
-60: (line 6) 0
-61: (line 6) LOAD_VAR
-62: (line 6) LOAD_CONST
-63: (line 6) 15
-64: (line 6) 0
-65: (line 6) CMP_EQ
-66: (line 6) OR
-67: (line 6) LOAD_CONST
-68: (line 6) 21
-69: (line 6) 0
-70: (line 6) JUMP_IF_FALSE
+16: (line 6) LOAD_CONST
+17: (line 6) 4
+18: (line 6) 0
+19: (line 6) NEG
+20: (line 6) PRINT
 ------------------------------
-i = i + 1;
+print -a;
 ------------------------------
-71: (line 7) LOAD_CONST
-72: (line 7) 17
-73: (line 7) 0
-74: (line 7) LOAD_VAR
-75: (line 7) LOAD_CONST
-76: (line 7) 18
-77: (line 7) 0
-78: (line 7) ADD
-79: (line 7) LOAD_CONST
-80: (line 7) 19
-81: (line 7) 0
-82: (line 7) STORE_VAR
+21: (line 8) LOAD_CONST
+22: (line 8) 5
+23: (line 8) 0
+24: (line 8) LOAD_VAR
+25: (line 8) NEG
+26: (line 8) PRINT
 ------------------------------
-continue;
+print --10;
 ------------------------------
-83: (line 8) LOAD_CONST
-84: (line 8) 20
-85: (line 8) 0
-86: (line 8) JUMP
-------------------------------
-print i endl;
-------------------------------
-87: (line 11) LOAD_CONST
-88: (line 11) 22
-89: (line 11) 0
-90: (line 11) LOAD_VAR
-91: (line 11) PRINT
-92: (line 11) ENDL
-------------------------------
-i = i + 1;
-------------------------------
-93: (line 12) LOAD_CONST
-94: (line 12) 23
-95: (line 12) 0
-96: (line 12) LOAD_VAR
-97: (line 12) LOAD_CONST
-98: (line 12) 24
-99: (line 12) 0
-100: (line 12) ADD
-101: (line 12) LOAD_CONST
-102: (line 12) 25
-103: (line 12) 0
-104: (line 12) STORE_VAR
+27: (line 9) LOAD_CONST
+28: (line 9) 6
+29: (line 9) 0
+30: (line 9) NEG
+31: (line 9) NEG
+32: (line 9) PRINT
 ------------------------------
 }
 ------------------------------
-105: (line 13) LOAD_CONST
-106: (line 13) 26
-107: (line 13) 0
-108: (line 13) JUMP
-------------------------------
-}
-------------------------------
-109: (line 14) LOAD_CONST
-110: (line 14) 28
-111: (line 14) 0
-112: (line 14) RETURN
-113: (line 14) FUNC_END
+33: (line 10) LOAD_CONST
+34: (line 10) 7
+35: (line 10) 0
+36: (line 10) RETURN
+37: (line 10) FUNC_END
 ------------------------------

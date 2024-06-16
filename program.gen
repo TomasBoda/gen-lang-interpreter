@@ -1,14 +1,10 @@
 
 func main() {
-    var i = 0;
+    var a = 10;
 
-    while (i < 10) {
-        if (i == 1 or i == 3 or i == 5 or i == 7 or i == 9) {
-            i = i + 1;
-            continue;
-        }
+    print !true;
+    print !false;
 
-        print i endl;
-        i = i + 1;
-    }
+    print -a;
+    print --10;
 }

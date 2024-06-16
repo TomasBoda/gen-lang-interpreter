@@ -1,0 +1,23 @@
+
+func resolve(var a, var b) {
+    if (a) {
+        if (b) {
+            print 1;
+        } else {
+            print 2;
+        }
+    } else {
+        if (b) {
+            print 3;
+        } else {
+            print 4;
+        }
+    }
+}
+
+func main() {
+    resolve(true, true);
+    resolve(true, false);
+    resolve(false, true);
+    resolve(false, false);
+}

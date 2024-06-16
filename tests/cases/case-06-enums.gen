@@ -1,0 +1,25 @@
+
+enum jobs { doctor, lawyer, pilot, engineer }
+
+object person {
+    var name;
+    var job;
+}
+
+func main() {
+    var person = new person;
+
+    person.name = "John Doe";
+
+    person.job = jobs.doctor;
+    print person.job endl;
+
+    person.job = jobs.pilot;
+    print person.job endl;
+
+    person.job = jobs.engineer;
+    print person.job endl;
+
+    person.job = jobs.lawyer;
+    print person.job endl;
+}

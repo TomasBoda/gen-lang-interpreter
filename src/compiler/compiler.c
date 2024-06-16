@@ -132,11 +132,12 @@ static void compile_object_declaration();
 static void compile_object_declaration_body();
 static void compile_object_declaration_property();
 static void compile_array_instantiation_expression();
-static void compile_conditional_statement();
-static void compile_conditional_statement_body();
+static void compile_conditional_statement(stack_long_t* break_stack);
+static void compile_conditional_statement_body(stack_long_t* break_stack);
 static void compile_while_statement();
-static void compile_while_statement_body();
+static void compile_while_statement_body(stack_long_t* break_stack);
 static void compile_continue_statement();
+static void compile_break_statement(stack_long_t* break_stack);
 static void compile_assignment_statement();
 static void compile_return();
 static void compile_print();
@@ -157,6 +158,7 @@ static void compile_numeric_literal();
 static void compile_boolean_literal();
 static void compile_string_literal();
 static void compile_parenthesised_expression();
+static void compile_negation();
 
 static void compile_logical_operator(token_t operator_token);
 static void compile_relational_operator(token_t operator_token);
@@ -206,6 +208,7 @@ bytecode_t* compile() {
                 compile_object_declaration();
                 break;
             default:
+                printf("type = %d\n", peek().type);
                 error_throw(ERROR_COMPILER, "Unrecognized top level statement", peek().line);
                 return NULL;
         }
@@ -288,7 +291,7 @@ static void compile_func_declaration_body() {
                 break;
             }
             case TOKEN_IF: {
-                compile_conditional_statement();
+                compile_conditional_statement(NULL);
                 break;
             }
             case TOKEN_WHILE: {
@@ -411,7 +414,7 @@ static inline void update_jump_values(int source_ip, int jump_ip) {
     free(bytes);
 }
 
-static void compile_conditional_statement() {
+static void compile_conditional_statement(stack_long_t* break_stack) {
     if (DEBUG == true) printf("Compiling compile_conditional_statement\n");
 
     int line = assert(TOKEN_IF).line;
@@ -426,7 +429,7 @@ static void compile_conditional_statement() {
     assert(TOKEN_CLOSE_PAREN);
     assert(TOKEN_OPEN_BRACE);
 
-    compile_conditional_statement_body();
+    compile_conditional_statement_body(break_stack);
 
     line = assert(TOKEN_CLOSE_BRACE).line;
 
@@ -447,7 +450,7 @@ static void compile_conditional_statement() {
     assert(TOKEN_ELSE);
     assert(TOKEN_OPEN_BRACE);
 
-    compile_conditional_statement_body();
+    compile_conditional_statement_body(break_stack);
 
     assert(TOKEN_CLOSE_BRACE);
 
@@ -455,7 +458,7 @@ static void compile_conditional_statement() {
     update_jump_values(ip3, ip5);
 }
 
-static void compile_conditional_statement_body() {
+static void compile_conditional_statement_body(stack_long_t* break_stack) {
     if (DEBUG == true) printf("Compiling compile_conditional_statement_body\n");
 
     while (peek().type != TOKEN_CLOSE_BRACE) {
@@ -465,7 +468,7 @@ static void compile_conditional_statement_body() {
                 break;
             }
             case TOKEN_IF: {
-                compile_conditional_statement();
+                compile_conditional_statement(break_stack);
                 break;
             }
             case TOKEN_WHILE: {
@@ -485,8 +488,11 @@ static void compile_conditional_statement_body() {
                 break;
             }
             case TOKEN_CONTINUE: {
-                printf("HERE\n");
                 compile_continue_statement();
+                break;
+            }
+            case TOKEN_BREAK: {
+                compile_break_statement(break_stack);
                 break;
             }
             default: {
@@ -518,7 +524,8 @@ static void compile_while_statement() {
     assert(TOKEN_OPEN_BRACE);
 
     // TODO: here
-    compile_while_statement_body();
+    stack_long_t* break_stack = stack_long_init();
+    compile_while_statement_body(break_stack);
 
     line = assert(TOKEN_CLOSE_BRACE).line;
 
@@ -529,9 +536,14 @@ static void compile_while_statement() {
     update_jump_values(ip2, ip3);
 
     stack_long_pop(compiler.continue_stack);
+
+    while (!stack_long_is_empty(break_stack)) {
+        long ip = stack_long_pop(break_stack);
+        update_jump_values(ip, ip3);
+    }
 }
 
-static void compile_while_statement_body() {
+static void compile_while_statement_body(stack_long_t* break_stack) {
     if (DEBUG == true) printf("Compiling compile_while_statement_body\n");
 
     while (peek().type != TOKEN_CLOSE_BRACE) {
@@ -541,7 +553,7 @@ static void compile_while_statement_body() {
                 break;
             }
             case TOKEN_IF: {
-                compile_conditional_statement();
+                compile_conditional_statement(break_stack);
                 break;
             }
             case TOKEN_WHILE: {
@@ -561,8 +573,11 @@ static void compile_while_statement_body() {
                 break;
             }
             case TOKEN_CONTINUE: {
-                printf("HERE\n");
                 compile_continue_statement();
+                break;
+            }
+            case TOKEN_BREAK: {
+                compile_break_statement(break_stack);
                 break;
             }
             default: {
@@ -579,6 +594,20 @@ static void compile_continue_statement() {
     int line = assert(TOKEN_CONTINUE).line;
 
     long jump_ip = stack_long_peek(compiler.continue_stack);
+    emit_numeric_literal_num((double)jump_ip, line);
+    emit(OP_JUMP, line);
+
+    assert(TOKEN_SEMICOLON);
+}
+
+static void compile_break_statement(stack_long_t* break_stack) {
+    if (DEBUG == true) printf("Compiling compile_break_statement\n");
+
+    int line = assert(TOKEN_BREAK).line;
+
+    stack_long_push(break_stack, compiler.bytecode->count);
+
+    long jump_ip = 0;
     emit_numeric_literal_num((double)jump_ip, line);
     emit(OP_JUMP, line);
 
@@ -930,9 +959,22 @@ static void compile_primary_expression() {
             return compile_boolean_literal();
         case TOKEN_STRING_LITERAL:
             return compile_string_literal();
+        case TOKEN_EMPHASIS:
+            return compile_negation();
+        case TOKEN_MINUS:
+            return compile_negation();
         default:
             return error_throw(ERROR_COMPILER, "Unknown primary expression", peek().line);
     }
+}
+
+static void compile_negation() {
+    if (DEBUG == true) printf("Compiling compile_negation\n");
+
+    int line = advance().line;
+
+    compile_expression();
+    emit(OP_NEG, line);
 }
 
 static void compile_parenthesised_expression() {
