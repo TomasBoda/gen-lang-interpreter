@@ -1,0 +1,43 @@
+
+object queue {
+    var data = [];
+}
+
+func queue_is_empty(var queue) {
+    return sizeof queue.data == 0;
+}
+
+func queue_enqueue(var queue, var value) {
+    var new_queue = [value];
+
+    var i = 0;
+    while (i < sizeof queue.data) {
+        new_queue = new_queue + queue.data[i];
+        i = i + 1;
+    }
+
+    queue.data = new_queue;
+}
+
+func queue_dequeue(var queue) {
+    var value = queue.data[sizeof queue.data - 1];
+    queue.data = queue.data - 1;
+    return value;
+}
+
+func main() {
+    var queue = new queue;
+
+    queue_enqueue(queue, 1);
+    queue_enqueue(queue, 2);
+    queue_enqueue(queue, 3);
+    queue_enqueue(queue, 4);
+    queue_enqueue(queue, 5);
+
+    queue_dequeue(queue);
+    queue_dequeue(queue);
+
+    while (!queue_is_empty(queue)) {
+        print queue_dequeue(queue) endl;
+    }
+}
