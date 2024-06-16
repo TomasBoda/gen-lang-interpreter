@@ -4,14 +4,14 @@ object queue {
 }
 
 func queue_is_empty(var queue) {
-    return sizeof queue.data == 0;
+    return |queue.data| == 0;
 }
 
 func queue_enqueue(var queue, var value) {
     var new_queue = [value];
 
     var i = 0;
-    while (i < sizeof queue.data) {
+    while (i < |queue.data|) {
         new_queue = new_queue + queue.data[i];
         i = i + 1;
     }
@@ -20,7 +20,7 @@ func queue_enqueue(var queue, var value) {
 }
 
 func queue_dequeue(var queue) {
-    var value = queue.data[sizeof queue.data - 1];
+    var value = queue.data[|queue.data| - 1];
     queue.data = queue.data - 1;
     return value;
 }
@@ -30,7 +30,7 @@ object stack {
 }
 
 func stack_is_empty(var stack) {
-    return sizeof stack.data == 0;
+    return |stack.data| == 0;
 }
 
 func stack_push(var stack, var value) {
@@ -38,7 +38,7 @@ func stack_push(var stack, var value) {
 }
 
 func stack_pop(var stack) {
-    var value = stack.data[sizeof stack.data - 1];
+    var value = stack.data[|stack.data| - 1];
     stack.data = stack.data - 1;
     return value;
 }
@@ -84,7 +84,7 @@ func bfs(var root) {
         print " ";
 
         var i = 0;
-        while (i < sizeof node.children) {
+        while (i < |node.children|) {
             queue_enqueue(queue, node.children[i]);
             i = i + 1;
         }
@@ -101,8 +101,8 @@ func dfs(var root) {
         print " ";
 
         var i = 0;
-        while (i < sizeof node.children) {
-            stack_push(stack, node.children[sizeof node.children - 1 - i]);
+        while (i < |node.children|) {
+            stack_push(stack, node.children[|node.children| - 1 - i]);
             i = i + 1;
         }
     }
@@ -113,7 +113,7 @@ func dfs_recursive(var root) {
     print " ";
 
     var i = 0;
-    while (i < sizeof root.children) {
+    while (i < |root.children|) {
         dfs_recursive(root.children[i]);
         i = i + 1;
     }

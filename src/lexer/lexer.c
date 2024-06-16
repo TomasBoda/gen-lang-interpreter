@@ -226,6 +226,7 @@ token_t lexer_get_token() {
         case '<': return make_token(match('=') ? TOKEN_LE : TOKEN_LT);
         case '>': return make_token(match('=') ? TOKEN_GE : TOKEN_GT);
         case '"': return string();
+        case '|': return make_token(TOKEN_LINE);
     }
 
     error_throw(ERROR_COMPILER, "Unexpected character found during lexing", lexer.line);

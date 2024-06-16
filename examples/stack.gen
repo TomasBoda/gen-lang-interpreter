@@ -4,7 +4,7 @@ object stack {
 }
 
 func stack_is_empty(var stack) {
-    return sizeof stack.data == 0;
+    return |stack.data| == 0;
 }
 
 func stack_push(var stack, var value) {
@@ -12,7 +12,7 @@ func stack_push(var stack, var value) {
 }
 
 func stack_pop(var stack) {
-    var value = stack.data[sizeof stack.data - 1];
+    var value = stack.data[|stack.data| - 1];
     stack.data = stack.data - 1;
     return value;
 }

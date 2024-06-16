@@ -853,25 +853,14 @@ static void compile_additive_expression() {
 static void compile_multiplicative_expression() {
     if (DEBUG == true) printf("Compiling compile_multiplicative_expression\n");
 
-    compile_sizeof_expression();
+    compile_access();
 
     while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
         token_t operator_token = advance();
 
-        compile_sizeof_expression();
+        compile_access();
         compile_binary_operator(operator_token);
     }
-}
-
-static void compile_sizeof_expression() {
-    if (peek().type == TOKEN_SIZEOF) {
-        int line = assert(TOKEN_SIZEOF).line;
-        compile_access();
-        emit(OP_SIZEOF, line);
-        return;
-    }
-
-    compile_access();
 }
 
 static void compile_access() {
@@ -970,9 +959,19 @@ static void compile_primary_expression() {
             return compile_negation();
         case TOKEN_MINUS:
             return compile_negation();
+        case TOKEN_LINE:
+            return compile_sizeof_expression();
         default:
             return error_throw(ERROR_COMPILER, "Unknown primary expression", peek().line);
     }
+}
+
+static void compile_sizeof_expression() {
+    int line = assert(TOKEN_LINE).line;
+    compile_expression();
+    assert(TOKEN_LINE);
+
+    emit(OP_SIZEOF, line);
 }
 
 static void compile_negation() {

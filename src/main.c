@@ -14,7 +14,7 @@ int main(int argc, const char* argv[]) {
 
     const char* file_path = argv[1];
     char* source_code = read_file(file_path);
-
+    
     interpret(source_code);
 
     return 0;
