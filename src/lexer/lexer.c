@@ -154,6 +154,7 @@ static token_type identifier_type() {
             break;
         case 'p': return check_keyword(1, 4, "rint", TOKEN_PRINT);
         case 'r': return check_keyword(1, 5, "eturn", TOKEN_RETURN);
+        // TODO: remove SIZEOF operator
         case 's': return check_keyword(1, 5, "izeof", TOKEN_SIZEOF);
         case 't': return check_keyword(1, 3, "rue", TOKEN_BOOLEAN_LITERAL);
         case 'u': return check_keyword(1, 2, "se", TOKEN_USE);

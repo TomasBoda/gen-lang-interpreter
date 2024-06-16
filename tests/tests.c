@@ -123,10 +123,8 @@ static void test(char* test_name, char* file_path, output_t* expected_output) {
 
     char* source_code = read_file(file_path);
 
-    lexer_init(source_code);
-    compiler_init();
-
-    bytecode_t* bytecode = compile();
+    compiler_t* compiler = compiler_init(source_code);
+    bytecode_t* bytecode = compile(compiler);
     vm_init(bytecode);
     vm_run(true);
 
