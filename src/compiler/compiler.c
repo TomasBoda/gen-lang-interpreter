@@ -855,7 +855,7 @@ static void compile_multiplicative_expression() {
 
     compile_access();
 
-    while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH) {
+    while (peek().type == TOKEN_STAR || peek().type == TOKEN_SLASH || peek().type == TOKEN_SLASH_SLASH) {
         token_t operator_token = advance();
 
         compile_access();
@@ -904,6 +904,8 @@ static void compile_binary_operator(token_t operator_token) {
             return emit(OP_MUL, operator_token.line);
         case TOKEN_SLASH:
             return emit(OP_DIV, operator_token.line);
+        case TOKEN_SLASH_SLASH:
+            return emit(OP_DIV_FLOOR, operator_token.line);
         default:
             return error_throw(ERROR_COMPILER, "Unknown binary operator", operator_token.line);
     }

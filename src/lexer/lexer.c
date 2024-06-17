@@ -76,6 +76,8 @@ static token_t make_token(token_type type) {
         token.length -= 2;
     }
 
+    //printf("TOKEN value = %s\n", substring(token.start, token.length));
+
     return token;
 }
 
@@ -92,13 +94,13 @@ static void skip_whitespace() {
                 lexer.line++;
                 advance();
                 break;
-            case '/':
+            /* case '/':
                 if (peek_next() == '/') {
                     while (peek() != '\n' && !is_at_end()) advance();
                 } else {
                     return;
                 }
-                break;
+                break; */
             default:
                 return;
         }
@@ -221,7 +223,7 @@ token_t lexer_get_token() {
         case '+': return make_token(TOKEN_PLUS);
         case '-': return make_token(TOKEN_MINUS);
         case '*': return make_token(TOKEN_STAR);
-        case '/': return make_token(TOKEN_SLASH);
+        case '/': return make_token(match('/') ? TOKEN_SLASH_SLASH : TOKEN_SLASH);
         case '=': return make_token(match('=') ? TOKEN_EQ : TOKEN_ASSIGNMENT);
         case '!': return make_token(match('=') ? TOKEN_NE : TOKEN_EMPHASIS);
         case '<': return make_token(match('=') ? TOKEN_LE : TOKEN_LT);

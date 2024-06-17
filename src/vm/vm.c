@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 #include "compiler/bytecode.h"
 #include "compiler/compiler.h"
@@ -93,6 +94,7 @@ static void run_add();
 static void run_sub();
 static void run_mul();
 static void run_div();
+static void run_div_floor();
 static void run_neg();
 static void run_cmp_eq();
 static void run_cmp_ne();
@@ -108,9 +110,6 @@ static void run_print_numeric_literal(value_t* value);
 static void run_print_boolean_literal(value_t* value);
 static void run_print_string_literal(value_t* value);
 static void run_stack_clear();
-static void run_not_implemented() {
-    error_throw(ERROR_RUNTIME, "Unrecognized instruction", line());
-}
 
 // STACK
 
@@ -245,7 +244,7 @@ void vm_run(bool test) {
         &&label_sub,                    // OP_SUB
         &&label_mul,                    // OP_MUL
         &&label_div,                    // OP_DIV
-        &&label_not_implemented,        // OP_DIV_FLOOR
+        &&label_div_floor,              // OP_DIV_FLOOR
         &&label_neg,                    // OP_NEG
 
         &&label_cmp_eq,                 // OP_CMP_EQ
@@ -354,10 +353,6 @@ void vm_run(bool test) {
             run_call();
             DISPATCH();
 
-        label_not_implemented:
-            run_not_implemented();
-            DISPATCH();
-
         label_jump:
             run_jump();
             DISPATCH();
@@ -380,6 +375,10 @@ void vm_run(bool test) {
 
         label_div:
             run_div();
+            DISPATCH();
+
+        label_div_floor:
+            run_div_floor();
             DISPATCH();
 
         label_neg:
@@ -1023,6 +1022,21 @@ static void run_div() {
     }
 
     stack_push(number(value2.as.number / value1.as.number));
+}
+
+static void run_div_floor() {
+    #ifdef DEBUG
+    dump_instruction("run_div_floor");
+    #endif
+
+    value_t value1 = stack_pop_number();
+    value_t value2 = stack_pop_number();
+
+    if (value2.as.number == 0) {
+        return error_throw(ERROR_RUNTIME, "Division by zero", line());
+    }
+
+    stack_push(number(floor(value2.as.number / value1.as.number)));
 }
 
 static void run_neg() {
