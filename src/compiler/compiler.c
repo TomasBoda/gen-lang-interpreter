@@ -245,7 +245,7 @@ static void compile_var_declaration() {
     assert(TOKEN_SEMICOLON);
 
     emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
-    emit(OP_STORE_VAR, line);
+    emit(OP_DECLARE_VAR, line);
 }
 
 static void compile_func_declaration() {
@@ -280,7 +280,7 @@ static void compile_func_declaration_param_list() {
         token_t identifier_token = assert(TOKEN_IDENTIFIER);
 
         emit_string_literal(substring(identifier_token.start, identifier_token.length), line);
-        emit(OP_STORE_VAR, line);
+        emit(OP_DECLARE_VAR, line);
 
         if (peek().type == TOKEN_COMMA) {
             advance();

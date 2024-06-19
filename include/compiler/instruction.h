@@ -8,6 +8,7 @@
 typedef enum {
     OP_LOAD_CONST,
 
+    OP_DECLARE_VAR,
     OP_LOAD_VAR,
     OP_STORE_VAR,
 

@@ -1,62 +1,136 @@
-func merge(var left, var right) {
-    var merged = [];
 
-    var i = 0;
-    var j = 0;
-
-    while (i < |left| and j < |right|) {
-        if (left[i] < right[j]) {
-            merged = merged + left[i];
-            i = i + 1;
-        } else {
-            merged = merged + right[j];
-            j = j + 1;
-        }
-    }
-
-    while (i < |left|) {
-        merged = merged + left[i];
-        i = i + 1;
-    }
-
-    while (j < |right|) {
-        merged = merged + right[j];
-        j = j + 1;
-    }
-
-    return merged;
+object queue {
+    var data = [];
 }
 
-func merge_sort(var array) {
-    if (|array| <= 1) {
-        return array;
-    }
+func queue_is_empty(var queue) {
+    return |queue.data| == 0;
+}
 
-    var center = |array| // 2;
-
-    var left = [];
-    var right = [];
+func queue_enqueue(var queue, var value) {
+    var new_queue = [value];
 
     var i = 0;
-    while (i < center) {
-        left = left + array[i];
+    while (i < |queue.data|) {
+        new_queue = new_queue + queue.data[i];
         i = i + 1;
     }
 
-    while (i < |array|) {
-        right = right + array[i];
+    queue.data = new_queue;
+}
+
+func queue_dequeue(var queue) {
+    var value = queue.data[|queue.data| - 1];
+    queue.data = queue.data - 1;
+    return value;
+}
+
+object stack {
+    var data = [];
+}
+
+func stack_is_empty(var stack) {
+    return |stack.data| == 0;
+}
+
+func stack_push(var stack, var value) {
+    stack.data = stack.data + value;
+}
+
+func stack_pop(var stack) {
+    var value = stack.data[|stack.data| - 1];
+    stack.data = stack.data - 1;
+    return value;
+}
+
+object node {
+    var value;
+    var children = [];
+}
+
+func node_create(var value) {
+    var node = new node;
+    node.value = value;
+    return node;
+}
+
+func tree_create() {
+    var r = node_create(1);
+
+    var rl = node_create(2);
+    var rr = node_create(3);
+
+    var rll = node_create(4);
+    var rlr = node_create(5);
+
+    var rrl = node_create(6);
+    var rrr = node_create(7);
+
+    rl.children = [rll, rlr];
+    rr.children = [rrl, rrr];
+
+    r.children = [rl, rr];
+
+    return r;
+}
+
+func bfs(var root) {
+    var queue = new queue;
+    queue_enqueue(queue, root);
+
+    while (!queue_is_empty(queue)) {
+        var node = queue_dequeue(queue);
+        print node.value;
+        print " ";
+
+        var i = 0;
+        while (i < |node.children|) {
+            queue_enqueue(queue, node.children[i]);
+            i = i + 1;
+        }
+    }
+}
+
+func dfs(var root) {
+    var stack = new stack;
+    stack_push(stack, root);
+
+    while (!stack_is_empty(stack)) {
+        var node = stack_pop(stack);
+        print node.value;
+        print " ";
+
+        var i = 0;
+        while (i < |node.children|) {
+            stack_push(stack, node.children[|node.children| - 1 - i]);
+            i = i + 1;
+        }
+    }
+}
+
+func dfs_recursive(var root) {
+    print root.value;
+    print " ";
+
+    var i = 0;
+    while (i < |root.children|) {
+        dfs_recursive(root.children[i]);
         i = i + 1;
     }
-
-    var left_sorted = merge_sort(left);
-    var right_sorted = merge_sort(right);
-
-    return merge(left_sorted, right_sorted);
 }
 
 func main() {
-    var array = [8, 1, 7, 3, 12, 11, 6, 5, 2, 9, 4, 10];
-    var sorted_array = merge_sort(array);
-    
-    print sorted_array;
+    var root = tree_create();
+
+    print "BFS using Queue:       ";
+    bfs(root);
+    print "" endl;
+
+    print "DFS using Stack:       ";
+    dfs(root);
+    print "" endl;
+
+    print "DFS using Recursion:   ";
+    dfs_recursive(root);
+    print "";
 }

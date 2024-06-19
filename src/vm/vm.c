@@ -68,6 +68,7 @@ static inline value_t string(char* string) {
 }
 
 static void run_load_const();
+static void run_declare_var();
 static void run_load_var();
 static void run_store_var();
 static void run_func_def();
@@ -211,6 +212,7 @@ void vm_run(bool test) {
     static void* dispatch_table[] = {
         &&label_load_const,             // OP_LOAD_CONST
 
+        &&label_declare_var,            // OP_DECLARE_VAR
         &&label_load_var,               // OP_LOAD_VAR
         &&label_store_var,              // OP_STORE_VAR
 
@@ -270,6 +272,10 @@ void vm_run(bool test) {
 
         label_load_const:
             run_load_const();
+            DISPATCH();
+
+        label_declare_var:
+            run_declare_var();
             DISPATCH();
 
         label_load_var:
@@ -495,6 +501,35 @@ static value_t* load_var(char* identifier) {
     return NULL;
 }
 
+static void run_declare_var() {
+    #ifdef DEBUG
+    dump_instruction("run_declare_var");
+    #endif
+
+    value_t identifier = stack_pop_string();
+    value_t value = stack_pop();
+
+    // global variable
+    if (call_stack_current(vm.call_stack) == NULL) {
+        /* if (table_get(vm.var_table, identifier.as.string) != NULL) {
+            error_throw(ERROR_RUNTIME, "Cannot declare a global variable with the same identifier, because it has been already declared", line());
+            return;
+        } */
+
+        table_set(vm.var_table, identifier.as.string, value);
+    }
+    // local variable
+    else {
+        // TODO: fix the removal of local variables within if and while scope
+        /* if (table_get(call_stack_current(vm.call_stack)->table, identifier.as.string) != NULL) {
+            error_throw(ERROR_RUNTIME, "Cannot declare a local variable with the same identifier, because it has been already declared", line());
+            return;
+        } */
+
+        table_set(call_stack_current(vm.call_stack)->table, identifier.as.string, value);
+    }
+}
+
 static void run_load_var() {
     #ifdef DEBUG
     dump_instruction("run_load_var");
@@ -519,11 +554,17 @@ static void run_store_var() {
     value_t identifier = stack_pop_string();
     value_t value = stack_pop();
 
-    if (call_stack_current(vm.call_stack) == NULL) {
-        table_set(vm.var_table, identifier.as.string, value);
-    } else {
+    if (table_get(call_stack_current(vm.call_stack)->table, identifier.as.string) != NULL) {
         table_set(call_stack_current(vm.call_stack)->table, identifier.as.string, value);
+        return;
     }
+
+    if (table_get(vm.var_table, identifier.as.string) != NULL) {
+        table_set(vm.var_table, identifier.as.string, value);
+        return;
+    }
+
+    error_throw(ERROR_RUNTIME, "Cannot assign to a variable, becuase it does not exist", line());
 }
 
 static inline void skip_func_def() {

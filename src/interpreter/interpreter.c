@@ -21,6 +21,7 @@
 const char* OP_CODE_LABELS[] = {
     "LOAD_CONST",
 
+    "DECLARE_VAR",
     "LOAD_VAR",
     "STORE_VAR",
 
